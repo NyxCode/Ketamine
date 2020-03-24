@@ -1,7 +1,7 @@
 use crate::error::{Error, Severity};
 use crate::statements::Statement;
 use crate::values::Identifier;
-use crate::{find_closing_brace, pop, pop_expect, ErrorKind, Parsed, ParserResult, ReadParse};
+use crate::{find_closing_brace, pop, pop_expect, ErrorKind, Parse, Parsed, ParserResult};
 use lexer::{Token, TokenValue};
 
 #[derive(Debug)]
@@ -58,7 +58,7 @@ fn parse_parameters(pos: usize, tokens: &mut &[Token]) -> ParserResult<FunctionP
     })
 }
 
-impl ReadParse for Function {
+impl Parse for Function {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let keyword =
             pop_expect(pos, tokens, TokenValue::FunctionKeyword).map_err(Severity::Recoverable)?;

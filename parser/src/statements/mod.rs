@@ -1,52 +1,49 @@
 mod assignment;
-mod r#return;
-mod value_statement;
+mod terminated;
+mod unterminated;
 
 use crate::error::{Error, ParserResult, Severity};
-use crate::values::Value;
-use crate::{Parsed, ReadParse};
+use crate::values::{ForExpr, IfExpr, Loop, Value, While};
+use crate::{first_value_of, impl_into_enum};
+use crate::{Parse, Parsed};
 pub use assignment::*;
 use lexer::{Token, TokenValue};
-pub use r#return::*;
-pub use value_statement::*;
+pub use terminated::*;
+pub use unterminated::*;
 
 #[derive(Debug)]
 pub enum Statement {
     Assignment(Assignment),
-    Return(Return),
-    ValueStatement(ValueStatement),
+    IfExpr(IfExpr),
+    ForExpr(ForExpr),
+    While(While),
+    Loop(Loop),
+    TerminatedStatement(TerminatedStatement),
+    UnterminatedStatement(UnterminatedStatement),
 }
+
+impl_into_enum!(Assignment, Statement);
+impl_into_enum!(IfExpr, Statement);
+impl_into_enum!(TerminatedStatement, Statement);
+impl_into_enum!(UnterminatedStatement, Statement);
 
 impl Statement {
     pub fn read(tokens: &mut &[Token]) -> ParserResult<Parsed<Statement>> {
         let first = &tokens[0];
 
-        match Return::try_read(first.start, *tokens) {
-            Ok((parsed, rest)) => {
-                *tokens = rest;
-                return Ok(parsed.map(Statement::Return));
-            }
-            Err(Severity::Fatal(err)) => return Err(err),
-            _ => (),
-        };
+        first_value_of!(
+            Statements: IfExpr,
+            ForExpr,
+            While,
+            Loop,
+            Assignment,
+            UnterminatedStatement,
+            TerminatedStatement
+        );
 
-        match Assignment::try_read(first.start, *tokens) {
-            Ok((parsed, rest)) => {
-                *tokens = rest;
-                return Ok(parsed.map(Statement::Assignment));
-            }
-            Err(Severity::Fatal(err)) => return Err(err),
-            _ => (),
-        };
-
-        match ValueStatement::try_read(first.start, *tokens) {
-            Ok((parsed, rest)) => {
-                *tokens = rest;
-                return Ok(parsed.map(Statement::ValueStatement));
-            }
-            Err(Severity::Recoverable(err)) => return Err(err),
-            Err(Severity::Fatal(err)) => return Err(err),
-        };
+        return return Statements::read(first.start, tokens)
+            .map_err(Severity::into_inner)
+            .map(|parsed| parsed.map(Into::into));
     }
 
     pub fn read_all(tokens: &mut &[Token]) -> ParserResult<Vec<Statement>> {

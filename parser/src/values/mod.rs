@@ -1,20 +1,30 @@
 mod binary_operation;
+mod block;
+mod r#break;
+mod r#continue;
+mod for_expr;
 mod function;
 mod function_call;
 mod identifier;
 mod if_expr;
 mod list;
+mod r#loop;
 mod object;
 mod parentheses;
 mod primitives;
+mod range;
+mod r#return;
 mod unary_operation;
+mod r#while;
 
 use crate::error::{Error, ErrorKind, ParserResult, Severity};
 use crate::impl_into_value;
 use crate::statements::Statement;
 use crate::{find_closing_brace, first_value_of, pop_expect};
-use crate::{Parsed, ReadParse};
+use crate::{Parse, Parsed};
 pub use binary_operation::*;
+pub use block::*;
+pub use for_expr::*;
 pub use function::*;
 pub use function_call::*;
 pub use identifier::*;
@@ -24,6 +34,12 @@ pub use list::*;
 pub use object::*;
 pub use parentheses::*;
 pub use primitives::*;
+pub use r#break::*;
+pub use r#continue::*;
+pub use r#loop::*;
+pub use r#return::*;
+pub use r#while::*;
+pub use range::*;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 pub use unary_operation::*;
@@ -37,7 +53,14 @@ pub enum Value {
     Object(Object),
     List(List),
     Identifier(Identifier),
+    Range(Range),
     IfExpr(IfExpr),
+    ForExpr(ForExpr),
+    While(While),
+    Loop(Loop),
+    Break(Break),
+    Return(Return),
+    Continue(Continue),
     //FieldAccess(FieldAccess),
     Function(Function),
     FunctionCall(FunctionCall),
@@ -70,10 +93,17 @@ impl Value {
         let end = first.end;
 
         first_value_of!(
-            Values: BinaryOperation,
+            Values: Return,
+            Continue,
+            Break,
+            BinaryOperation,
+            Range,
             UnaryOperation,
             Function,
             IfExpr,
+            ForExpr,
+            While,
+            Loop,
             FunctionCall,
             Object,
             List,

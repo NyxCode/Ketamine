@@ -1,7 +1,6 @@
 use crate::error::{Error, Severity};
-use crate::statements::Statement;
 use crate::values::Value;
-use crate::{pop_expect, Parsed, ParserResult, ReadParse};
+use crate::{pop_expect, Parse, Parsed, ParserResult};
 use lexer::{Operator, Token, TokenValue};
 
 #[derive(Debug)]
@@ -10,7 +9,7 @@ pub struct Assignment {
     pub value: Value,
 }
 
-impl ReadParse for Assignment {
+impl Parse for Assignment {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let lhs = Value::read(tokens[0].start, tokens).map_err(Severity::Recoverable)?;
         let assign = pop_expect(lhs.end, tokens, TokenValue::Operator(Operator::Assign))

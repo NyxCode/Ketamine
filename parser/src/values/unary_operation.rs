@@ -1,6 +1,6 @@
 use crate::error::{Error, ErrorKind, Severity};
 use crate::values::Value;
-use crate::{pop, Parsed, ReadParse};
+use crate::{pop, Parse, Parsed};
 use lexer::{Operator, Token, TokenValue};
 
 #[derive(Debug, Clone, Copy)]
@@ -15,7 +15,7 @@ pub struct UnaryOperation {
     pub operand: Box<Value>,
 }
 
-impl ReadParse for UnaryOperation {
+impl Parse for UnaryOperation {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let operator_token = pop(pos, tokens).map_err(Severity::Recoverable)?;
         let operator = match &operator_token.value {

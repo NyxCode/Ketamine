@@ -1,12 +1,12 @@
 use crate::error::{Error, ErrorKind, ParserResult, Severity};
 use crate::values::Value;
-use crate::{peek, pop, pop_expect, Parsed, ReadParse};
+use crate::{peek, pop, pop_expect, Parse, Parsed};
 use lexer::{Token, TokenValue};
 
 #[derive(Debug)]
 pub struct List(pub Vec<Value>);
 
-impl ReadParse for List {
+impl Parse for List {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let open_bracket =
             pop_expect(pos, tokens, TokenValue::BracketOpen).map_err(Severity::Recoverable)?;

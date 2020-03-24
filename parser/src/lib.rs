@@ -17,14 +17,18 @@ mod values;
 #[test]
 fn test() {
     let input = r#"
-        fib = function(n) {
-            return if n < 3 {
-                1
-            } else {
+        for i in 0..3 {
+            print("hey");
+        }
+        while true {
+            print("endless!");
+        }
 
-            }
-        };
-
+        loop {
+            print("this is better!");
+            continue;
+            break 1
+        }
     "#;
 
     let tokens = match tokenize(input) {
@@ -120,7 +124,7 @@ fn find_closing_brace(pos: usize, tokens: &[Token]) -> ParserResult<usize> {
     Err(Error::position(pos, ErrorKind::Unbalanced))
 }
 
-trait ReadParse: Sized + Debug {
+trait Parse: Sized + Debug {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>>;
     fn try_read(pos: usize, tokens: &[Token]) -> Result<(Parsed<Self>, &[Token]), Severity<Error>> {
         let mut tokens = tokens;

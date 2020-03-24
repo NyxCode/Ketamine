@@ -1,8 +1,8 @@
 use crate::error::{Error, Severity};
-use crate::values::Value;
-use crate::{peek, pop, pop_expect, ErrorKind, Identifier, Parsed, ParserResult, ReadParse};
-use lexer::{Token, TokenValue};
 use crate::first_value_of;
+use crate::values::Value;
+use crate::{peek, pop, pop_expect, ErrorKind, Identifier, Parse, Parsed, ParserResult};
+use lexer::{Token, TokenValue};
 
 #[derive(Debug)]
 pub struct FunctionCall {
@@ -10,13 +10,9 @@ pub struct FunctionCall {
     pub arguments: Vec<Value>,
 }
 
-impl ReadParse for FunctionCall {
+impl Parse for FunctionCall {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
-        first_value_of!(
-            Receiver:
-            crate::values::Parentheses,
-            Identifier,
-        );
+        first_value_of!(Receiver: crate::values::Parentheses, Identifier,);
 
         let (receiver, rest) = Receiver::try_read(pos, *tokens)?;
         *tokens = rest;

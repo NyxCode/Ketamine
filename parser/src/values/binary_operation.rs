@@ -2,7 +2,7 @@ use crate::error::{Error, ErrorKind, ParserResult, Severity};
 use crate::first_value_of;
 use crate::tree::print_value;
 use crate::values::Value;
-use crate::{pop, Parsed, ReadParse};
+use crate::{pop, Parse, Parsed};
 use lexer::{Operator, Token, TokenValue};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
@@ -37,7 +37,7 @@ pub enum BinaryOperator {
     LessEqThan,
 }
 
-impl ReadParse for BinaryOperator {
+impl Parse for BinaryOperator {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let token = pop(pos, tokens).map_err(Severity::Recoverable)?;
         let operator = match &token.value {
@@ -48,7 +48,7 @@ impl ReadParse for BinaryOperator {
             TokenValue::Operator(Operator::Eq) => BinaryOperator::Eq,
             TokenValue::Operator(Operator::NotEq) => BinaryOperator::NotEq,
             TokenValue::Operator(Operator::GreaterEqThan) => BinaryOperator::GreaterEqThan,
-            TokenValue::Operator(Operator::LessEqThan) => BinaryOperator::LessThan,
+            TokenValue::Operator(Operator::LessEqThan) => BinaryOperator::LessEqThan,
             TokenValue::Operator(Operator::GreaterThan) => BinaryOperator::GreaterThan,
             TokenValue::Operator(Operator::LessThan) => BinaryOperator::LessThan,
             other => {
@@ -89,7 +89,7 @@ pub struct BinaryOperation {
     pub rhs: Box<Value>,
 }
 
-impl ReadParse for BinaryOperation {
+impl Parse for BinaryOperation {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let first = {
             let lhs = OperandValues::read(pos, tokens)?.map(Into::into);
@@ -115,7 +115,7 @@ impl ReadParse for BinaryOperation {
 #[derive(Debug)]
 struct OperatorAndRHS(BinaryOperator, Value);
 
-impl ReadParse for OperatorAndRHS {
+impl Parse for OperatorAndRHS {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let operator = BinaryOperator::read(pos, tokens)?;
         let rhs = OperandValues::read(pos, tokens)?.map(Into::into);

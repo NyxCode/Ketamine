@@ -1,11 +1,11 @@
 use crate::error::Severity;
-use crate::{pop, Error, ErrorKind, Parsed, ParserResult, ReadParse};
+use crate::{pop, Error, ErrorKind, Parse, Parsed, ParserResult};
 use lexer::{Token, TokenValue};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Identifier(pub String);
 
-impl ReadParse for Identifier {
+impl Parse for Identifier {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         match pop(pos, tokens).map_err(Severity::Recoverable)? {
             Token {

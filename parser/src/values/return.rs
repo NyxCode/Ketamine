@@ -1,12 +1,15 @@
 use crate::error::{Error, Severity};
+use crate::impl_into_enum;
 use crate::values::Value;
-use crate::{pop, pop_expect, ErrorKind, Parsed, ParserResult, ReadParse};
+use crate::{pop, pop_expect, ErrorKind, Parse, Parsed, ParserResult};
 use lexer::{Token, TokenValue};
 
 #[derive(Debug)]
 pub struct Return(pub Box<Value>);
 
-impl ReadParse for Return {
+impl_into_enum!(Return, Value);
+
+impl Parse for Return {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let keyword =
             pop_expect(pos, tokens, TokenValue::ReturnKeyword).map_err(Severity::Recoverable)?;

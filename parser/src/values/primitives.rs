@@ -1,9 +1,9 @@
 use crate::error::{Error, ErrorKind, ParserResult, Severity};
 use crate::values::Value;
-use crate::{pop, Parsed, ReadParse};
+use crate::{pop, Parse, Parsed};
 use lexer::{Token, TokenValue};
 
-impl ReadParse for bool {
+impl Parse for bool {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let token = pop(pos, tokens).map_err(Severity::Recoverable)?;
         if let TokenValue::Boolean(boolean) = &token.value {
@@ -23,7 +23,7 @@ impl ReadParse for bool {
     }
 }
 
-impl ReadParse for i64 {
+impl Parse for i64 {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let token = pop(pos, tokens).map_err(Severity::Recoverable)?;
         if let TokenValue::Integer(int) = &token.value {
@@ -43,7 +43,7 @@ impl ReadParse for i64 {
     }
 }
 
-impl ReadParse for f64 {
+impl Parse for f64 {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let token = pop(pos, tokens).map_err(Severity::Recoverable)?;
         if let TokenValue::Float(float) = &token.value {
@@ -62,7 +62,7 @@ impl ReadParse for f64 {
         }
     }
 }
-impl ReadParse for String {
+impl Parse for String {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let token = pop(pos, tokens).map_err(Severity::Recoverable)?;
         if let TokenValue::String(string) = &token.value {

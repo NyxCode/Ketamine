@@ -1,8 +1,8 @@
 use crate::error::{Error, ParserResult, Severity};
-use crate::statements::{Statement, ValueStatement};
+use crate::statements::{Statement, TerminatedStatement};
 use crate::values::{read_code_block, Value};
-use crate::{find_closing_brace, peek, peek_expect, pop, pop_expect, Parsed, ReadParse};
-use lexer::{Token, TokenValue, tokenize};
+use crate::{find_closing_brace, peek, peek_expect, pop, pop_expect, Parse, Parsed};
+use lexer::{tokenize, Token, TokenValue};
 
 #[derive(Debug)]
 pub struct IfExpr {
@@ -15,10 +15,10 @@ pub struct IfExpr {
 #[derive(Debug)]
 pub struct ElseIf {
     pub condition: Box<Value>,
-    pub body: Vec<Statement>
+    pub body: Vec<Statement>,
 }
 
-impl ReadParse for IfExpr {
+impl Parse for IfExpr {
     fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
         let main_branch = IfExpr::read_main_branch(pos, tokens)?;
         let (condition, body) = main_branch.value;
@@ -28,7 +28,7 @@ impl ReadParse for IfExpr {
             Ok(parsed) => {
                 *tokens = try_read_else;
                 Some(parsed)
-            },
+            }
             Err(Severity::Recoverable(..)) => None,
             Err(fatal @ Severity::Fatal(..)) => return Err(fatal),
         };
@@ -52,7 +52,10 @@ impl ReadParse for IfExpr {
 }
 
 impl IfExpr {
-    fn read_main_branch(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<(Value, Vec<Statement>)>, Severity<Error>> {
+    fn read_main_branch(
+        pos: usize,
+        tokens: &mut &[Token],
+    ) -> Result<Parsed<(Value, Vec<Statement>)>, Severity<Error>> {
         let keyword =
             pop_expect(pos, tokens, TokenValue::IfKeyword).map_err(Severity::Recoverable)?;
         let condition = Value::read(pos, tokens).map_err(Severity::Fatal)?;
@@ -60,7 +63,7 @@ impl IfExpr {
         Ok(Parsed {
             start: keyword.start,
             end: body.end,
-            value: (condition.value, body.value)
+            value: (condition.value, body.value),
         })
     }
 }
@@ -102,8 +105,8 @@ fn read_else_if(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<ElseIf>, Sev
         end: branch.end,
         value: ElseIf {
             condition: Box::new(branch.value.0),
-            body: branch.value.1
-        }
+            body: branch.value.1,
+        },
     })
 }
 
