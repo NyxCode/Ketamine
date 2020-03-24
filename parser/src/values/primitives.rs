@@ -1,10 +1,10 @@
-use crate::error::{Error, ErrorKind, ParserResult, Severity};
-use crate::values::Value;
-use crate::{pop, Parse, Parsed};
+use crate::error::{Error, ErrorKind, Severity};
+
+use crate::{pop, Parse, Parsed, impl_into_enum, values::Value};
 use lexer::{Token, TokenValue};
 
 impl Parse for bool {
-    fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
+    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
         let token = pop(pos, tokens).map_err(Severity::Recoverable)?;
         if let TokenValue::Boolean(boolean) = &token.value {
             Ok(Parsed {
@@ -16,7 +16,7 @@ impl Parse for bool {
             Err(Error::range(
                 token.start,
                 token.end,
-                ErrorKind::UnexpectedToken(token.value.clone()),
+                ErrorKind::UnexpectedToken(&token.value),
             ))
             .map_err(Severity::Recoverable)
         }
@@ -24,7 +24,7 @@ impl Parse for bool {
 }
 
 impl Parse for i64 {
-    fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
+    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
         let token = pop(pos, tokens).map_err(Severity::Recoverable)?;
         if let TokenValue::Integer(int) = &token.value {
             Ok(Parsed {
@@ -36,7 +36,7 @@ impl Parse for i64 {
             Err(Error::range(
                 token.start,
                 token.end,
-                ErrorKind::UnexpectedToken(token.value.clone()),
+                ErrorKind::UnexpectedToken(&token.value),
             ))
             .map_err(Severity::Recoverable)
         }
@@ -44,7 +44,7 @@ impl Parse for i64 {
 }
 
 impl Parse for f64 {
-    fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
+    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
         let token = pop(pos, tokens).map_err(Severity::Recoverable)?;
         if let TokenValue::Float(float) = &token.value {
             Ok(Parsed {
@@ -56,14 +56,14 @@ impl Parse for f64 {
             Err(Error::range(
                 token.start,
                 token.end,
-                ErrorKind::UnexpectedToken(token.value.clone()),
+                ErrorKind::UnexpectedToken(&token.value),
             ))
             .map_err(Severity::Recoverable)
         }
     }
 }
 impl Parse for String {
-    fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
+    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
         let token = pop(pos, tokens).map_err(Severity::Recoverable)?;
         if let TokenValue::String(string) = &token.value {
             Ok(Parsed {
@@ -75,9 +75,14 @@ impl Parse for String {
             Err(Error::range(
                 token.start,
                 token.end,
-                ErrorKind::UnexpectedToken(token.value.clone()),
+                ErrorKind::UnexpectedToken(&token.value),
             ))
             .map_err(Severity::Recoverable)
         }
     }
 }
+
+impl_into_enum!(bool => Value:Boolean);
+impl_into_enum!(i64 => Value:Integer);
+impl_into_enum!(f64 => Value:Float);
+impl_into_enum!(String => Value:String);

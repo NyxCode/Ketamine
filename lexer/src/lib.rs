@@ -2,21 +2,16 @@ use crate::keywords::read_keyword;
 use once_cell::unsync::Lazy;
 use regex::Regex;
 
-use std::fmt::{Display, Error, Formatter, Result as FmtResult};
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::ops::Deref;
 use std::str::FromStr;
 
 mod keywords;
 mod operator;
+mod token;
 
+pub use token::*;
 pub use operator::*;
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Token {
-    pub start: usize,
-    pub end: usize,
-    pub value: TokenValue,
-}
 
 #[derive(Debug)]
 pub struct LexingError(usize);
@@ -30,83 +25,6 @@ impl Display for LexingError {
 impl LexingError {
     pub fn location(&self) -> usize {
         self.0
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum TokenValue {
-    Integer(i64),
-    Float(f64),
-    Boolean(bool),
-    String(String),
-    Identifier(String),
-    Operator(Operator),
-
-    ParenthesesOpen,
-    ParenthesesClose,
-    BracketOpen,
-    BracketClose,
-    BraceOpen,
-    BraceClose,
-
-    Semicolon,
-    Colon,
-    Comma,
-    Dot,
-
-    Range,
-
-    FunctionKeyword,
-    ReturnKeyword,
-    BreakKeyword,
-    ContinueKeyword,
-    IfKeyword,
-    ElseKeyword,
-    ForKeyword,
-    InKeyword,
-    LoopKeyword,
-    WhileKeyword,
-}
-
-impl Display for TokenValue {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        fn value(f: &mut Formatter<'_>, kind: &str, value: impl Display) -> FmtResult {
-            write!(f, "{}<{}>", kind, value)
-        }
-
-        fn token(f: &mut Formatter<'_>, token: &str) -> FmtResult {
-            write!(f, "{}", token)
-        }
-
-        match self {
-            TokenValue::Integer(int) => value(f, "int", int),
-            TokenValue::Float(float) => value(f, "float", float),
-            TokenValue::String(string) => value(f, "string", string),
-            TokenValue::Boolean(boolean) => value(f, "bool", boolean),
-            TokenValue::Identifier(ident) => value(f, "identifier", ident),
-            TokenValue::Operator(op) => value(f, "operator", op),
-            TokenValue::ParenthesesOpen => token(f, "("),
-            TokenValue::ParenthesesClose => token(f, ")"),
-            TokenValue::BracketOpen => token(f, "["),
-            TokenValue::BracketClose => token(f, "]"),
-            TokenValue::BraceOpen => token(f, "{"),
-            TokenValue::BraceClose => token(f, "}"),
-            TokenValue::Semicolon => token(f, ";"),
-            TokenValue::Comma => token(f, ","),
-            TokenValue::Dot => token(f, "."),
-            TokenValue::Colon => token(f, ":"),
-            TokenValue::Range => token(f, ".."),
-            TokenValue::FunctionKeyword => token(f, "function"),
-            TokenValue::ReturnKeyword => token(f, "return"),
-            TokenValue::BreakKeyword => token(f, "break"),
-            TokenValue::ContinueKeyword => token(f, "continue"),
-            TokenValue::ForKeyword => token(f, "for"),
-            TokenValue::InKeyword => token(f, "in"),
-            TokenValue::LoopKeyword => token(f, "loop"),
-            TokenValue::WhileKeyword => token(f, "while"),
-            TokenValue::IfKeyword => token(f, "if"),
-            TokenValue::ElseKeyword => token(f, "else"),
-        }
     }
 }
 
@@ -303,17 +221,10 @@ impl<'a> Iterator for TokenIterator<'a> {
 }
 
 pub fn tokenize(input: &str) -> Result<Vec<Token>, LexingError> {
-    let mut iter = TokenIterator::new(input);
     let mut tokens = vec![];
-    while let Some(token) = iter.next() {
+    for token in TokenIterator::new(input) {
         tokens.push(token?);
     }
     Ok(tokens)
 }
 
-#[test]
-fn test() {
-    let input = r#"for i in 0..3 {}"#;
-    let tokens = tokenize(input).unwrap();
-    println!("{:?}", tokens);
-}

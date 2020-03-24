@@ -37,6 +37,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "interpreter"
+version = "0.1.0"
+dependencies = [
+ "lexer 0.1.0",
+ "parser 0.1.0",
+ "report 0.1.0",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

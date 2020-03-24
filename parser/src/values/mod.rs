@@ -1,12 +1,11 @@
 mod binary_operation;
-mod block;
 mod r#break;
 mod r#continue;
-mod for_expr;
+mod r#for;
 mod function;
-mod function_call;
+mod call;
 mod identifier;
-mod if_expr;
+mod r#if;
 mod list;
 mod r#loop;
 mod object;
@@ -16,19 +15,19 @@ mod range;
 mod r#return;
 mod unary_operation;
 mod r#while;
+mod field_access;
 
 use crate::error::{Error, ErrorKind, ParserResult, Severity};
-use crate::impl_into_value;
+use crate::impl_into_enum;
 use crate::statements::Statement;
 use crate::{find_closing_brace, first_value_of, pop_expect};
 use crate::{Parse, Parsed};
 pub use binary_operation::*;
-pub use block::*;
-pub use for_expr::*;
+pub use r#for::*;
 pub use function::*;
-pub use function_call::*;
+pub use call::*;
 pub use identifier::*;
-pub use if_expr::*;
+pub use r#if::*;
 use lexer::{Token, TokenValue};
 pub use list::*;
 pub use object::*;
@@ -40,8 +39,9 @@ pub use r#loop::*;
 pub use r#return::*;
 pub use r#while::*;
 pub use range::*;
+pub use field_access::*;
 use std::fmt::Debug;
-use std::marker::PhantomData;
+
 pub use unary_operation::*;
 
 #[derive(Debug)]
@@ -53,9 +53,10 @@ pub enum Value {
     Object(Object),
     List(List),
     Identifier(Identifier),
+    FieldAccess(FieldAccess),
     Range(Range),
-    IfExpr(IfExpr),
-    ForExpr(ForExpr),
+    If(If),
+    For(For),
     While(While),
     Loop(Loop),
     Break(Break),
@@ -63,34 +64,28 @@ pub enum Value {
     Continue(Continue),
     //FieldAccess(FieldAccess),
     Function(Function),
-    FunctionCall(FunctionCall),
+    Call(Call),
     UnaryOperation(UnaryOperation),
     BinaryOperation(BinaryOperation),
     Parentheses(Parentheses),
     Nothing,
 }
 
-impl_into_value!(BinaryOperation);
-impl_into_value!(UnaryOperation);
-impl_into_value!(Function);
-impl_into_value!(IfExpr);
-impl_into_value!(FunctionCall);
-impl_into_value!(Object);
-impl_into_value!(List);
-impl_into_value!(String);
-impl_into_value!(Identifier);
-impl_into_value!(bool, Boolean);
-impl_into_value!(i64, Integer);
-impl_into_value!(f64, Float);
+pub type ParsedValue = Parsed<Value>;
 
-impl Value {
-    pub fn read(pos: usize, tokens: &mut &[Token]) -> ParserResult<Parsed<Value>> {
+impl_into_enum!(BinaryOperation => Value:BinaryOperation);
+impl_into_enum!(Function => Value:Function);
+impl_into_enum!(Object => Value:Object);
+impl_into_enum!(List => Value:List);
+impl_into_enum!(Identifier => Value:Identifier);
+
+impl Parse for Value {
+    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
         if tokens.is_empty() {
-            return Err(Error::position(pos, ErrorKind::UnexpectedEOF));
+            let kind = ErrorKind::UnexpectedEOF;
+            let err = Error::position(pos, kind);
+            return Err(Severity::Recoverable(err));
         }
-        let first = &tokens[0];
-        let start = first.start;
-        let end = first.end;
 
         first_value_of!(
             Values: Return,
@@ -100,11 +95,11 @@ impl Value {
             Range,
             UnaryOperation,
             Function,
-            IfExpr,
-            ForExpr,
+            If,
+            For,
             While,
             Loop,
-            FunctionCall,
+            Call,
             Object,
             List,
             String,
@@ -114,18 +109,18 @@ impl Value {
             Identifier,
             Parentheses,
         );
-        return Values::read(pos, tokens)
-            .map_err(Severity::into_inner)
-            .map(|parsed| parsed.map(Into::into));
+        let value = Values::read(pos, tokens)?
+            .map(Into::into);
+        Ok(value)
     }
 }
 
-fn read_code_block(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Vec<Statement>>, Error> {
+fn read_code_block<'a >(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Vec<Parsed<Statement>>>, Error<'a>> {
     let open_brace = pop_expect(pos, tokens, TokenValue::BraceOpen)?;
     let close_brace_idx = find_closing_brace(open_brace.start, *tokens)?;
-    let close_brace_pos = *&tokens[close_brace_idx].end;
+    let close_brace_pos = tokens[close_brace_idx].end;
     let mut body_tokens = &tokens[..close_brace_idx];
-    let body = Statement::read_all(&mut body_tokens)?;
+    let body = Statement::read_all(pos, &mut body_tokens)?;
     *tokens = &tokens[(close_brace_idx + 1)..];
     Ok(Parsed {
         start: open_brace.start,

@@ -1,22 +1,16 @@
-use crate::error::{Error, Severity};
+use crate::error::{Error, Severity, AddErrorCtx};
 use crate::statements::Statement;
-use crate::values::Identifier;
+use crate::values::{Identifier, read_code_block};
 use crate::{find_closing_brace, pop, pop_expect, ErrorKind, Parse, Parsed, ParserResult};
 use lexer::{Token, TokenValue};
 
 #[derive(Debug)]
 pub struct Function {
-    pub parameters: Vec<Identifier>,
-    pub body: Vec<Statement>,
+    pub parameters: Vec<Parsed<Identifier>>,
+    pub body: Vec<Parsed<Statement>>,
 }
 
-struct FunctionParameters {
-    start: usize,
-    end: usize,
-    parameters: Vec<Identifier>,
-}
-
-fn parse_parameters(pos: usize, tokens: &mut &[Token]) -> ParserResult<FunctionParameters> {
+fn parse_parameters<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Vec<Parsed<Identifier>>, Error<'a>> {
     let par_open = pop_expect(pos, tokens, TokenValue::ParenthesesOpen)?;
 
     let mut parameters = vec![];
@@ -31,7 +25,12 @@ fn parse_parameters(pos: usize, tokens: &mut &[Token]) -> ParserResult<FunctionP
                 break token;
             }
             TokenValue::Identifier(ident) if accept_value => {
-                parameters.push(Identifier(ident.to_owned()));
+                let ident = Parsed {
+                    start: token.start,
+                    end: token.end,
+                    value: Identifier(ident.to_owned())
+                };
+                parameters.push(ident);
                 accept_value = false;
                 accept_close = true;
                 accept_comma = true;
@@ -45,42 +44,33 @@ fn parse_parameters(pos: usize, tokens: &mut &[Token]) -> ParserResult<FunctionP
                 return Err(Error::range(
                     token.start,
                     token.end,
-                    ErrorKind::UnexpectedToken(other.clone()),
+                    ErrorKind::UnexpectedToken(&other),
                 ));
             }
         }
     };
 
-    Ok(FunctionParameters {
-        start: par_open.start,
-        end: par_close.end,
-        parameters,
-    })
+    Ok(parameters)
 }
 
 impl Parse for Function {
-    fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
-        let keyword =
-            pop_expect(pos, tokens, TokenValue::FunctionKeyword).map_err(Severity::Recoverable)?;
-        let params = parse_parameters(keyword.end, tokens).map_err(Severity::Fatal)?;
-        let brace_open =
-            pop_expect(params.end, tokens, TokenValue::BraceOpen).map_err(Severity::Fatal)?;
-
-        let brace_close_idx =
-            find_closing_brace(brace_open.start, tokens).map_err(Severity::Fatal)?;
-        let brace_close_pos = &tokens[brace_close_idx].end;
-
-        let mut body_tokens = &tokens[..brace_close_idx];
-        let body = Statement::read_all(&mut body_tokens).map_err(Severity::Fatal)?;
-        *tokens = &tokens[(brace_close_idx + 1)..];
+    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
+        let keyword = pop_expect(pos, tokens, TokenValue::FunctionKeyword)
+            .map_err(Severity::Recoverable)?;
+        let params = parse_parameters(keyword.end, tokens)
+            .map_err(Severity::Fatal)
+            .ctx("parsing function parameters")?;
+        let body = read_code_block(pos, tokens)
+            .map_err(Severity::Fatal)
+            .ctx("parsing function body")?;
 
         let function = Function {
-            parameters: params.parameters,
-            body,
+            parameters: params,
+            body: body.value,
         };
         Ok(Parsed {
             start: keyword.start,
-            end: *brace_close_pos,
+            end: body.end,
             value: function,
         })
     }

@@ -25,7 +25,7 @@ impl Display for Operator {
 
 impl Operator {
     fn read_single_char(input: &str) -> Option<Operator> {
-        if input.len() < 1 {
+        if input.is_empty() {
             return None;
         }
         match &input[..1] {
@@ -37,7 +37,7 @@ impl Operator {
             "<" => Some(Operator::LessThan),
             ">" => Some(Operator::GreaterThan),
             "!" => Some(Operator::Negate),
-            _ => return None,
+            _ => None,
         }
     }
 

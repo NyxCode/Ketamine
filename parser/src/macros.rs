@@ -7,49 +7,47 @@ use std::fmt::Debug;
 
 #[derive(Debug)]
 pub(crate) enum ParseEither<A, B>
-where
-    A: Parse + Debug,
-    B: Parse + Debug,
+    where
+        A: Parse + Debug,
+        B: Parse + Debug,
 {
     A(A),
     B(B),
 }
 
 impl<A, B> From<ParseEither<A, B>> for Value
-where
-    A: Into<Value> + Parse + Debug,
-    B: Into<Value> + Parse + Debug,
-{
+    where A: Parse + Debug + Into<Value>,
+          B: Parse + Debug + Into<Value> {
     fn from(either: ParseEither<A, B>) -> Self {
         match either {
             ParseEither::A(a) => a.into(),
-            ParseEither::B(b) => b.into(),
-        }
-    }
-}
-impl<A, B> From<ParseEither<A, B>> for Statement
-where
-    A: Into<Statement> + Parse + Debug,
-    B: Into<Statement> + Parse + Debug,
-{
-    fn from(either: ParseEither<A, B>) -> Self {
-        match either {
-            ParseEither::A(a) => a.into(),
-            ParseEither::B(b) => b.into(),
+            ParseEither::B(b) => b.into()
         }
     }
 }
 
+impl<A, B> From<ParseEither<A, B>> for Statement
+    where A: Parse + Debug + Into<Statement>,
+          B: Parse + Debug + Into<Statement> {
+    fn from(either: ParseEither<A, B>) -> Self {
+        match either {
+            ParseEither::A(a) => a.into(),
+            ParseEither::B(b) => b.into()
+        }
+    }
+}
+
+
 impl<A, B> Parse for ParseEither<A, B>
-where
-    A: Parse + Debug,
-    B: Parse + Debug,
+    where
+        A: Parse + Debug,
+        B: Parse + Debug,
 {
-    fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
+    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
         match A::try_read(pos, *tokens) {
             Ok((parsed, rest)) => {
                 *tokens = rest;
-                return Ok(parsed.map(ParseEither::A));
+                return Ok(parsed.map(ParseEither::A))
             }
             Err(err @ Severity::Fatal(..)) => return Err(err),
             _ => (),
@@ -80,29 +78,13 @@ macro_rules! first_value_of {
 
 #[macro_export]
 macro_rules! impl_into_enum {
-    ($t:ident, $enum:ty) => {
+    ($t:ty => $enum:ty : $variant:ident) => {
         impl From<$t> for $enum {
             fn from(v: $t) -> Self {
-                <$enum>::$t(v)
+                <$enum>::$variant(v)
             }
         }
     };
+
 }
 
-#[macro_export]
-macro_rules! impl_into_value {
-    ($t:ident) => {
-        impl From<$t> for Value {
-            fn from(v: $t) -> Self {
-                Value::$t(v)
-            }
-        }
-    };
-    ($from:ty, $variant:ident) => {
-        impl From<$from> for Value {
-            fn from(v: $from) -> Self {
-                Value::$variant(v)
-            }
-        }
-    };
-}

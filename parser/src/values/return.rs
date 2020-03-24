@@ -1,39 +1,31 @@
 use crate::error::{Error, Severity};
-use crate::impl_into_enum;
-use crate::values::Value;
-use crate::{pop, pop_expect, ErrorKind, Parse, Parsed, ParserResult};
+use crate::{impl_into_enum, peek};
+use crate::values::{Value, ParsedValue};
+use crate::{pop_expect, Parse, Parsed};
 use lexer::{Token, TokenValue};
 
 #[derive(Debug)]
-pub struct Return(pub Box<Value>);
+pub struct Return(pub Box<Parsed<Value>>);
 
-impl_into_enum!(Return, Value);
+impl_into_enum!(Return => Value:Return);
 
 impl Parse for Return {
-    fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
-        let keyword =
-            pop_expect(pos, tokens, TokenValue::ReturnKeyword).map_err(Severity::Recoverable)?;
-
-        let next = &tokens[0];
-        match &next.value {
-            TokenValue::Semicolon => {
-                let semicolon = pop_expect(next.start, tokens, TokenValue::Semicolon)
-                    .map_err(Severity::Fatal)?;
-                Ok(Parsed {
-                    start: keyword.start,
-                    end: semicolon.end,
-                    value: Return(Box::new(Value::Nothing)),
-                })
+    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
+        let keyword = pop_expect(pos, tokens, TokenValue::ReturnKeyword)
+            .map_err(Severity::Recoverable)?;
+        let value = match peek(keyword.end, tokens) {
+            Ok(token) if token.value == TokenValue::Semicolon || token.value == TokenValue::BraceClose => {
+                Parsed { start: token.start, end: token.end, value: Value::Nothing }
             }
-            _other => {
-                let value = Value::read(next.start, tokens)
-                    .map_err(Severity::Fatal)?
-                    .map(Box::new)
-                    .map(Return);
-                let _semicolon = pop_expect(value.end, tokens, TokenValue::Semicolon)
-                    .map_err(Severity::Fatal)?;
-                Ok(value)
+            Ok(Token { start, .. }) => {
+                Value::read(*start, tokens).map_err(Severity::into_fatal)?
             }
-        }
+            Err(err) => return Err(Severity::Fatal(err)),
+        };
+        Ok(Parsed {
+            start: keyword.start,
+            end: value.end,
+            value: Return(Box::new(value)),
+        })
     }
 }

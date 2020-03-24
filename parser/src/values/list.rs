@@ -1,13 +1,13 @@
-use crate::error::{Error, ErrorKind, ParserResult, Severity};
-use crate::values::Value;
+use crate::error::{Error, ErrorKind, Severity};
+use crate::values::{Value, ParsedValue};
 use crate::{peek, pop, pop_expect, Parse, Parsed};
 use lexer::{Token, TokenValue};
 
 #[derive(Debug)]
-pub struct List(pub Vec<Value>);
+pub struct List(pub Vec<Parsed<Value>>);
 
 impl Parse for List {
-    fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
+    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
         let open_bracket =
             pop_expect(pos, tokens, TokenValue::BracketOpen).map_err(Severity::Recoverable)?;
         let mut values = vec![];
@@ -21,8 +21,8 @@ impl Parse for List {
                     *tokens = &tokens[1..];
                     break *end;
                 }
-                other => {
-                    let value = Value::read(pos, tokens).map_err(Severity::Fatal)?.value;
+                _other => {
+                    let value = Value::read(pos, tokens).map_err(Severity::into_fatal)?;
                     values.push(value);
                 }
             }
@@ -39,7 +39,7 @@ impl Parse for List {
                     ..
                 } => (),
                 other => {
-                    let kind = ErrorKind::UnexpectedToken(other.value.clone());
+                    let kind = ErrorKind::UnexpectedToken(&other.value);
                     return Err(Error::range(other.start, other.end, kind))
                         .map_err(Severity::Fatal);
                 }

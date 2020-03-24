@@ -1,36 +1,41 @@
 use crate::error::{Error, Severity};
 use crate::first_value_of;
-use crate::values::Value;
-use crate::{peek, pop, pop_expect, ErrorKind, Identifier, Parse, Parsed, ParserResult};
+use crate::values::{Value, ParsedValue};
+use crate::{peek, pop, pop_expect, ErrorKind, Identifier, Parse, Parsed, ParserResult, impl_into_enum};
 use lexer::{Token, TokenValue};
 
 #[derive(Debug)]
-pub struct FunctionCall {
-    pub receiver: Box<Value>,
-    pub arguments: Vec<Value>,
+pub struct Call {
+    pub receiver: Box<ParsedValue>,
+    pub arguments: Vec<ParsedValue>,
 }
 
-impl Parse for FunctionCall {
-    fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
+impl_into_enum!(Call => Value:Call);
+
+impl Parse for Call {
+    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
         first_value_of!(Receiver: crate::values::Parentheses, Identifier,);
 
-        let (receiver, rest) = Receiver::try_read(pos, *tokens)?;
-        *tokens = rest;
+        let receiver = Receiver::read(pos, tokens)?;
 
-        let args = read_arguments(receiver.end, tokens).map_err(Severity::Recoverable)?;
+        let args = read_arguments(receiver.end, tokens)
+            .map_err(Severity::Recoverable)?;
 
         Ok(Parsed {
-            value: FunctionCall {
-                receiver: Box::new(receiver.value.into()),
-                arguments: args.value,
-            },
             start: receiver.start,
             end: args.end,
+            value: Call {
+                receiver: Box::new(receiver.map(Value::from)),
+                arguments: args.value,
+            },
         })
     }
 }
 
-fn read_arguments(pos: usize, tokens: &mut &[Token]) -> ParserResult<Parsed<Vec<Value>>> {
+fn read_arguments<'a>(
+    pos: usize,
+    tokens: &mut &'a [Token]
+) -> Result<Parsed<Vec<Parsed<Value>>>, Error<'a>> {
     let par_open = pop_expect(pos, tokens, TokenValue::ParenthesesOpen)?;
 
     let mut args = vec![];
@@ -54,14 +59,15 @@ fn read_arguments(pos: usize, tokens: &mut &[Token]) -> ParserResult<Parsed<Vec<
                 accept_comma = true;
                 accept_close = true;
                 accept_arg = false;
-                let arg = Value::read(pos, tokens)?;
-                args.push(arg.value);
+                let arg = Value::read(pos, tokens)
+                    .map_err(Severity::into_inner)?;
+                args.push(arg);
             }
             other => {
                 return Err(Error::range(
                     next_token.start,
                     next_token.end,
-                    ErrorKind::UnexpectedToken(other.clone()),
+                    ErrorKind::UnexpectedToken(&other),
                 ));
             }
         }

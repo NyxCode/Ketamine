@@ -1,13 +1,13 @@
 use crate::error::{Error, ErrorKind, ParserResult, Severity};
-use crate::values::{Identifier, Value};
+use crate::values::{Identifier, Value, ParsedValue};
 use crate::{peek, pop, pop_expect, Parse, Parsed};
 use lexer::{Token, TokenValue};
 
 #[derive(Debug)]
-pub struct Object(pub Vec<(Identifier, Value)>);
+pub struct Object(pub Vec<(Parsed<Identifier>, Parsed<Value>)>);
 
 impl Parse for Object {
-    fn read(pos: usize, tokens: &mut &[Token]) -> Result<Parsed<Self>, Severity<Error>> {
+    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
         let brace_open =
             pop_expect(pos, tokens, TokenValue::BraceOpen).map_err(Severity::Recoverable)?;
         let values = read_pairs(brace_open.end, tokens).map_err(Severity::Fatal)?;
@@ -22,7 +22,10 @@ impl Parse for Object {
     }
 }
 
-fn read_pairs(pos: usize, tokens: &mut &[Token]) -> ParserResult<Parsed<Vec<(Identifier, Value)>>> {
+fn read_pairs<'a>(
+    pos: usize,
+    tokens: &mut &'a [Token]
+) -> Result<Parsed<Vec<(Parsed<Identifier>, Parsed<Value>)>>, Error<'a>> {
     let start = pos;
     let mut end = start;
     let mut values = vec![];
@@ -38,7 +41,7 @@ fn read_pairs(pos: usize, tokens: &mut &[Token]) -> ParserResult<Parsed<Vec<(Ide
                 break;
             }
             other => {
-                let kind = ErrorKind::UnexpectedToken(other.clone());
+                let kind = ErrorKind::UnexpectedToken(&other);
                 return Err(Error::position(pos, kind));
             }
         };
@@ -55,21 +58,21 @@ fn read_pairs(pos: usize, tokens: &mut &[Token]) -> ParserResult<Parsed<Vec<(Ide
     })
 }
 
-fn read_pair(pos: usize, tokens: &mut &[Token]) -> ParserResult<Parsed<(Identifier, Value)>> {
+fn read_pair<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<(Parsed<Identifier>, Parsed<Value>)>, Error<'a>> {
     let ident_token = pop(pos, tokens)?;
     let ident = if let TokenValue::Identifier(ident) = &ident_token.value {
-        Identifier(ident.clone())
+        Parsed { start: ident_token.start, end: ident_token.end, value: Identifier(ident.clone()) }
     } else {
-        let kind = ErrorKind::UnexpectedToken(ident_token.value.clone());
+        let kind = ErrorKind::UnexpectedToken(&ident_token.value);
         return Err(Error::range(ident_token.start, ident_token.end, kind));
     };
-    let colon = pop_expect(ident_token.end, tokens, TokenValue::Colon)?;
+    let _colon = pop_expect(ident_token.end, tokens, TokenValue::Colon)?;
 
-    let value = Value::read(pos, tokens)?;
+    let value = Value::read(pos, tokens).map_err(Severity::into_inner)?;
 
     Ok(Parsed {
-        value: (ident, value.value),
         start: ident_token.start,
         end: value.end,
+        value: (ident, value),
     })
 }
