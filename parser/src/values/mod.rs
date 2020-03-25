@@ -91,8 +91,8 @@ impl Parse for Value {
             Values: Return,
             Continue,
             Break,
-            BinaryOperation,
-            Range,
+            //BinaryOperation,
+            //Range,
             UnaryOperation,
             Function,
             If,
@@ -106,6 +106,7 @@ impl Parse for Value {
             bool,
             i64,
             f64,
+            FieldAccess,
             Identifier,
             Parentheses,
         );

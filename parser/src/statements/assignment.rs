@@ -1,6 +1,6 @@
 use crate::error::{Error, Severity, AddErrorCtx};
-use crate::values::Value;
-use crate::{pop_expect, Parse, Parsed, impl_into_enum};
+use crate::values::{Value, FieldAccess, Identifier};
+use crate::{pop_expect, Parse, Parsed, impl_into_enum, first_value_of};
 use lexer::{Operator, Token, TokenValue};
 use crate::statements::Statement;
 
@@ -11,15 +11,24 @@ pub struct Assignment {
 }
 
 impl_into_enum!(Assignment => Statement:Assignment);
+first_value_of!(
+    LHS:
+    Identifier,
+    FieldAccess
+);
 
 impl Parse for Assignment {
     fn read<'a>(_pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
-        let lhs = Value::read(tokens[0].start, tokens)?;
+        println!("parsing assignment..");
+        let lhs = LHS::read(tokens[0].start, tokens)?.map(Value::from);
         let assign = pop_expect(lhs.end, tokens, TokenValue::Operator(Operator::Assign))
             .map_err(Severity::Recoverable)?;
+        println!("--A");
         let rhs = Value::read(assign.end, tokens)
             .map_err(Severity::into_fatal)
             .ctx("parsing assignment")?;
+        println!("--B");
+
         let semicolon = pop_expect(rhs.end, tokens, TokenValue::Semicolon)
             .map_err(Severity::Fatal)
             .ctx("parsing assignment")?;

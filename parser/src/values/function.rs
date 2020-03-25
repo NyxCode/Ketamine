@@ -55,14 +55,18 @@ fn parse_parameters<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Vec<Pars
 
 impl Parse for Function {
     fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
+        println!("parsing function.. {:?}", tokens);
         let keyword = pop_expect(pos, tokens, TokenValue::FunctionKeyword)
             .map_err(Severity::Recoverable)?;
+        println!("params..");
         let params = parse_parameters(keyword.end, tokens)
             .map_err(Severity::Fatal)
             .ctx("parsing function parameters")?;
+        println!("body..");
         let body = read_code_block(pos, tokens)
             .map_err(Severity::Fatal)
             .ctx("parsing function body")?;
+        println!("bodyDONE..");
 
         let function = Function {
             parameters: params,

@@ -10,7 +10,8 @@ impl Parse for TerminatedStatement {
     fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
         let value = Value::read(pos, tokens)?;
         let _semicolon =
-            pop_expect(value.end, tokens, TokenValue::Semicolon).map_err(Severity::Fatal)?;
+            pop_expect(value.end, tokens, TokenValue::Semicolon)
+                .map_err(Severity::Recoverable)?;
         Ok(value.map(TerminatedStatement))
     }
 }

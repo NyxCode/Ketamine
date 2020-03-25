@@ -7,7 +7,7 @@ use crate::values::{For, If, Loop, While};
 use crate::{first_value_of, impl_into_enum};
 use crate::{Parse, Parsed};
 pub use assignment::*;
-use lexer::{Token};
+use lexer::Token;
 pub use terminated::*;
 pub use unterminated::*;
 
@@ -28,13 +28,14 @@ impl_into_enum!(UnterminatedStatement => Statement:UnterminatedStatement);
 impl Parse for Statement {
     fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
         first_value_of!(
-            Statements: If,
+            Statements:
+            TerminatedStatement,
+            If,
             For,
             While,
             Loop,
             Assignment,
             UnterminatedStatement,
-            TerminatedStatement
         );
 
         Statements::read(pos, tokens).map(|parsed| parsed.map(Into::into))

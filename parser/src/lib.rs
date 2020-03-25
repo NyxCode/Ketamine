@@ -8,7 +8,8 @@ use lexer::{Token, TokenValue, tokenize};
 use std::fmt::Debug;
 use crate::statements::Statement;
 use std::time::Instant;
-
+use log::LevelFilter;
+use log::{info};
 
 mod error;
 mod macros;
@@ -18,14 +19,9 @@ mod values;
 
 #[test]
 fn test() {
+    env_logger::builder().filter_level(LevelFilter::Warn).is_test(true).init();
     let input = r#"
-        fib = function(n) {
-            if n < 3 {
-                1
-            } else {
-                fib(n - 2) + fib(n - 1)
-            }
-        };
+        x = function(){};
     "#;
     let start = Instant::now();
     let tokens = match tokenize(input) {
@@ -41,9 +37,9 @@ fn test() {
     match parsed {
         Err(err) => report::report(input, err.start, err.end, err),
         Ok(x) => {
-            println!("{:?}", x);
+            //println!("{:?}", x);
             //assert_eq!(&format!("{:?}", x), r#"[Assignment(Assignment { target: Identifier(Identifier("x")), value: FunctionCall(FunctionCall { receiver: Identifier(Identifier("print")), arguments: [BinaryOperation(BinaryOperation { lhs: Integer(1), operator: Add, rhs: BinaryOperation(BinaryOperation { lhs: Integer(1), operator: Mul, rhs: Integer(1) }) })] }) })]"#);
-            tree::print_code(0, &x[..]);
+            //tree::print_code(0, &x[..]);
         }
     };
 }
@@ -119,6 +115,7 @@ fn find_closing_brace(pos: usize, tokens: &[Token]) -> Result<usize, Error> {
 trait Parse: Sized + Debug {
     fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>>;
     fn try_read(pos: usize, tokens: &[Token]) -> Result<(Parsed<Self>, &[Token]), Severity> {
+        info!("trying to parse {}..", std::any::type_name::<Self>());
         let mut tokens = tokens;
         let parsed = Self::read(pos, &mut tokens)?;
         Ok((parsed, tokens))

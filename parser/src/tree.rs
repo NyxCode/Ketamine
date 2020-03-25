@@ -133,8 +133,13 @@ fn print_field_access(level: usize, statement: &FieldAccess) {
     print(level, "field_access");
     print(level + 1, "lhs");
     print_value(level + 2, &statement.receiver.value);
-    print(level + 1, "field");
-    print_ident(level + 2, &statement.field.value);
+    let mut level = level + 1;
+    for nexted in &statement.fields {
+        print(level, "field");
+        print_ident(level + 1, &nexted.value);
+        level += 2;
+    }
+
 }
 
 fn print_statement(level: usize, statement: &Statement) {
