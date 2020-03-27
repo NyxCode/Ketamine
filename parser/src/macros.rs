@@ -1,62 +1,40 @@
-use crate::error::{Error, Severity};
-use crate::statements::Statement;
-use crate::values::Value;
-use crate::{Parse, Parsed};
-use std::fmt::Debug;
+use crate::{Parse, Token, AST, TryParse};
+use lexer::{Parsed, TokenValue};
+use crate::error::{Error, ParseResult, Severity};
+use std::fmt::{Debug, Formatter, Result as FmtResult};
 
-#[derive(Debug)]
-pub(crate) enum ParseEither<A, B>
-    where
-        A: Parse + Debug,
-        B: Parse + Debug,
-{
+pub enum ParseEither<A, B> {
     A(A),
     B(B),
 }
 
-impl<A, B> From<ParseEither<A, B>> for Value
-    where A: Parse + Debug + Into<Value>,
-          B: Parse + Debug + Into<Value> {
-    fn from(either: ParseEither<A, B>) -> Self {
-        match either {
-            ParseEither::A(a) => a.into(),
-            ParseEither::B(b) => b.into()
+impl<A, B> Debug for ParseEither<A, B> where A: Debug, B: Debug {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match self {
+            ParseEither::A(a) => write!(f, "ParseEither::A({:?})", a),
+            ParseEither::B(b) => write!(f, "ParseEither::B({:?})", b),
         }
     }
 }
 
-impl<A, B> From<ParseEither<A, B>> for Statement
-    where A: Parse + Debug + Into<Statement>,
-          B: Parse + Debug + Into<Statement> {
-    fn from(either: ParseEither<A, B>) -> Self {
-        match either {
-            ParseEither::A(a) => a.into(),
-            ParseEither::B(b) => b.into()
+impl<A: Parse, B: Parse> Parse for ParseEither<A, B> {
+    fn parse<'a>(pos: usize, tokens: &mut &'a [Token]) -> ParseResult<'a, Self> {
+        match A::try_parse(pos, tokens) {
+            Ok(a) => Ok(a.map(ParseEither::A)),
+            Err(err @ Parsed { value: Severity::Fatal(..), .. }) => Err(err),
+            Err(Parsed { value: Severity::Recoverable(..), .. }) => match B::try_parse(pos, tokens) {
+                Ok(b) => Ok(b.map(ParseEither::B)),
+                Err(err) => Err(err),
+            },
         }
     }
 }
 
-
-impl<A, B> Parse for ParseEither<A, B>
-    where
-        A: Parse + Debug,
-        B: Parse + Debug,
-{
-    fn read<'a>(pos: usize, tokens: &mut &'a [Token]) -> Result<Parsed<Self>, Severity<'a>> {
-        match A::try_read(pos, *tokens) {
-            Ok((parsed, rest)) => {
-                *tokens = rest;
-                return Ok(parsed.map(ParseEither::A))
-            }
-            Err(err @ Severity::Fatal(..)) => return Err(err),
-            _ => (),
-        }
-        match B::try_read(pos, *tokens) {
-            Ok((parsed, rest)) => {
-                *tokens = rest;
-                Ok(parsed.map(ParseEither::B))
-            }
-            Err(err) => Err(err),
+impl<A, B> From<ParseEither<A, B>> for AST where A: Into<AST>, B: Into<AST> {
+    fn from(either: ParseEither<A, B>) -> Self {
+        match either {
+            ParseEither::A(a) => a.into(),
+            ParseEither::B(b) => b.into()
         }
     }
 }
@@ -84,6 +62,5 @@ macro_rules! impl_into_enum {
             }
         }
     };
-
 }
 
