@@ -1,7 +1,7 @@
 use crate::error::{Error, Severity, AddErrorCtx};
 use crate::values::{Value, FieldAccess, Identifier};
 use crate::{pop_expect, Parse, Parsed, impl_into_enum, first_value_of};
-use lexer::{Operator, Token, TokenValue};
+use lexer::{TokenValue};
 use crate::statements::Statement;
 
 #[derive(Debug)]

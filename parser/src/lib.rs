@@ -4,7 +4,7 @@ use crate::error::{Error, ErrorKind, ParserResult, Severity};
 
 
 use crate::values::{Identifier, Value};
-use lexer::{Token, TokenValue, tokenize};
+use lexer::{TokenValue, tokenize};
 use std::fmt::Debug;
 use crate::statements::Statement;
 use std::time::Instant;

@@ -16,6 +16,7 @@ mod r#return;
 mod unary_operation;
 mod r#while;
 mod field_access;
+mod expression;
 
 use crate::error::{Error, ErrorKind, ParserResult, Severity};
 use crate::impl_into_enum;

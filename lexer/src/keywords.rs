@@ -1,4 +1,4 @@
-use crate::{read_semicolon, read_separator, Token, TokenValue};
+use crate::{read_semicolon, read_separator, TokenValue, Parsed};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::ops::Deref;
@@ -10,7 +10,7 @@ fn is_separate_token(input: &str) -> bool {
         || read_semicolon(0, input).is_some()
 }
 
-pub(crate) fn read_keyword(offset: usize, input: &str) -> Option<Token> {
+pub(crate) fn read_keyword(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     static KEYWORDS: Lazy<HashMap<&'static str, TokenValue>> = Lazy::new(|| {
         let mut keywords = HashMap::new();
         keywords.insert("function", TokenValue::FunctionKeyword);
@@ -35,7 +35,7 @@ pub(crate) fn read_keyword(offset: usize, input: &str) -> Option<Token> {
             let keyword: &'static str = keyword;
             input.starts_with(&keyword) && is_separate_token(&input[keyword.len()..])
         })
-        .map(|(keyword, value)| Token {
+        .map(|(keyword, value)| Parsed {
             start: offset,
             end: offset + keyword.len(),
             value: value.clone(),

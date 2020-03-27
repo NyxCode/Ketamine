@@ -1,13 +1,49 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
-use crate::Operator;
+use std::fmt::{Display, Formatter, Result as FmtResult, Debug, Error};
+use std::ops::Deref;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Token {
+pub struct Parsed<T> {
     pub start: usize,
     pub end: usize,
-    pub value: TokenValue,
+    pub value: T,
 }
 
+impl<T> Clone for Parsed<T> where T: Clone {
+    fn clone(&self) -> Self {
+        Parsed {
+            start: self.start,
+            end: self.end,
+            value: self.value.clone(),
+        }
+    }
+}
+
+impl<T> Debug for Parsed<T> where T: Debug {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "Parsed({}..{}: {:?})", self.start, self.end, self.value)
+    }
+}
+
+impl<T> PartialEq for Parsed<T> where T: PartialEq {
+    fn eq(&self, other: &Self) -> bool {
+        self.start == other.start &&
+            self.end == other.end &&
+            self.value == other.value
+    }
+}
+
+impl<T> Parsed<T> {
+    pub fn new(start: usize, end: usize, value: T) -> Self {
+        Parsed { start, end, value }
+    }
+
+    pub fn map<O>(self, map: impl FnOnce(T) -> O) -> Parsed<O> {
+        Parsed {
+            start: self.start,
+            end: self.end,
+            value: map(self.value),
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenValue {
@@ -16,7 +52,19 @@ pub enum TokenValue {
     Boolean(bool),
     String(String),
     Identifier(String),
-    Operator(Operator),
+
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Assign,
+    Eq,
+    NotEq,
+    GreaterThan,
+    LessThan,
+    GreaterEqThan,
+    LessEqThan,
+    Negate,
 
     ParenthesesOpen,
     ParenthesesClose,
@@ -46,41 +94,51 @@ pub enum TokenValue {
 
 impl Display for TokenValue {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        fn value(f: &mut Formatter<'_>, kind: &str, value: impl Display) -> FmtResult {
-            write!(f, "{}<{}>", kind, value)
-        }
-        fn token(f: &mut Formatter<'_>, token: &str) -> FmtResult {
-            write!(f, "{}", token)
-        }
+        write!(f, "{}", self.name())
+    }
+}
 
+impl TokenValue {
+    pub fn name(&self) -> &'static str {
         match self {
-            TokenValue::Integer(int) => value(f, "int", int),
-            TokenValue::Float(float) => value(f, "float", float),
-            TokenValue::String(string) => value(f, "string", string),
-            TokenValue::Boolean(boolean) => value(f, "bool", boolean),
-            TokenValue::Identifier(ident) => value(f, "identifier", ident),
-            TokenValue::Operator(op) => value(f, "operator", op),
-            TokenValue::ParenthesesOpen => token(f, "("),
-            TokenValue::ParenthesesClose => token(f, ")"),
-            TokenValue::BracketOpen => token(f, "["),
-            TokenValue::BracketClose => token(f, "]"),
-            TokenValue::BraceOpen => token(f, "{"),
-            TokenValue::BraceClose => token(f, "}"),
-            TokenValue::Semicolon => token(f, ";"),
-            TokenValue::Comma => token(f, ","),
-            TokenValue::Dot => token(f, "."),
-            TokenValue::Colon => token(f, ":"),
-            TokenValue::Range => token(f, ".."),
-            TokenValue::FunctionKeyword => token(f, "function"),
-            TokenValue::ReturnKeyword => token(f, "return"),
-            TokenValue::BreakKeyword => token(f, "break"),
-            TokenValue::ContinueKeyword => token(f, "continue"),
-            TokenValue::ForKeyword => token(f, "for"),
-            TokenValue::InKeyword => token(f, "in"),
-            TokenValue::LoopKeyword => token(f, "loop"),
-            TokenValue::WhileKeyword => token(f, "while"),
-            TokenValue::IfKeyword => token(f, "if"),
-            TokenValue::ElseKeyword => token(f, "else"),
+            TokenValue::Integer(_) => "integer",
+            TokenValue::Float(_) => "float",
+            TokenValue::Boolean(_) => "boolean",
+            TokenValue::String(_) => "string",
+            TokenValue::Identifier(_) => "identifier",
+            TokenValue::ParenthesesOpen => "(",
+            TokenValue::ParenthesesClose => ")",
+            TokenValue::BracketOpen => "[",
+            TokenValue::BracketClose => "]",
+            TokenValue::BraceOpen => "{",
+            TokenValue::BraceClose => "}",
+            TokenValue::Semicolon => ";",
+            TokenValue::Colon => ":",
+            TokenValue::Comma => ",",
+            TokenValue::Dot => ".",
+            TokenValue::Range => "..",
+            TokenValue::FunctionKeyword => "function",
+            TokenValue::ReturnKeyword => "return",
+            TokenValue::BreakKeyword => "break",
+            TokenValue::ContinueKeyword => "continue",
+            TokenValue::IfKeyword => "if",
+            TokenValue::ElseKeyword => "else",
+            TokenValue::ForKeyword => "for",
+            TokenValue::InKeyword => "in",
+            TokenValue::LoopKeyword => "loop",
+            TokenValue::WhileKeyword => "while",
+            TokenValue::Add => "+",
+            TokenValue::Sub => "-",
+            TokenValue::Mul => "*",
+            TokenValue::Div => "/",
+            TokenValue::Assign => "=",
+            TokenValue::Eq => "==",
+            TokenValue::NotEq => "!=",
+            TokenValue::GreaterThan => ">",
+            TokenValue::LessThan => "<",
+            TokenValue::GreaterEqThan => ">=",
+            TokenValue::LessEqThan => "<=",
+            TokenValue::Negate => "!",
         }
     }
 }

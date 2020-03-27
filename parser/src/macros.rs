@@ -2,7 +2,6 @@ use crate::error::{Error, Severity};
 use crate::statements::Statement;
 use crate::values::Value;
 use crate::{Parse, Parsed};
-use lexer::Token;
 use std::fmt::Debug;
 
 #[derive(Debug)]

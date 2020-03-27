@@ -28,19 +28,13 @@ impl LexingError {
     }
 }
 
-impl Token {
-    pub fn len(&self) -> usize {
-        self.end - self.start
-    }
-}
-
 fn skip_whitespace(input: &str) -> usize {
     input
         .find(|c: char| !c.is_whitespace())
         .unwrap_or(input.len())
 }
 
-fn read_integer(offset: usize, input: &str) -> Option<Token> {
+fn read_integer(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     let regex = Lazy::new(|| Regex::new(r#"^\d+"#).unwrap());
 
     let m = regex.deref().find(input)?;
@@ -48,14 +42,14 @@ fn read_integer(offset: usize, input: &str) -> Option<Token> {
         .map(TokenValue::Integer)
         .expect("ICE");
 
-    Some(Token {
+    Some(Parsed {
         start: offset + m.start(),
         end: offset + m.end(),
         value,
     })
 }
 
-fn read_float(offset: usize, input: &str) -> Option<Token> {
+fn read_float(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     let regex = Lazy::new(|| Regex::new(r#"^\d+\.\d+"#).unwrap());
 
     let m = regex.deref().find(input)?;
@@ -63,27 +57,27 @@ fn read_float(offset: usize, input: &str) -> Option<Token> {
         .map(TokenValue::Float)
         .expect("ICE");
 
-    Some(Token {
+    Some(Parsed {
         start: offset + m.start(),
         end: offset + m.end(),
         value,
     })
 }
 
-fn read_ident(offset: usize, input: &str) -> Option<Token> {
+fn read_ident(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     let regex = Lazy::new(|| Regex::new(r#"^[A-Za-z_]+[A-Za-z0-9_]*"#).unwrap());
 
     let m = regex.deref().find(input)?;
     let value = TokenValue::Identifier(m.as_str().to_owned());
 
-    Some(Token {
+    Some(Parsed {
         start: offset + m.start(),
         end: offset + m.end(),
         value,
     })
 }
 
-fn read_separator(offset: usize, input: &str) -> Option<Token> {
+fn read_separator(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     let value = match input.chars().next()? {
         '(' => TokenValue::ParenthesesOpen,
         ')' => TokenValue::ParenthesesClose,
@@ -93,16 +87,16 @@ fn read_separator(offset: usize, input: &str) -> Option<Token> {
         '}' => TokenValue::BraceClose,
         _ => return None,
     };
-    Some(Token {
+    Some(Parsed {
         start: offset,
         end: offset + 1,
         value,
     })
 }
 
-fn read_range(offset: usize, input: &str) -> Option<Token> {
+fn read_range(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     if input.starts_with("..") {
-        Some(Token {
+        Some(Parsed {
             start: offset,
             end: offset + 2,
             value: TokenValue::Range,
@@ -112,9 +106,9 @@ fn read_range(offset: usize, input: &str) -> Option<Token> {
     }
 }
 
-fn read_semicolon(offset: usize, input: &str) -> Option<Token> {
+fn read_semicolon(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     if input.chars().next()? == ';' {
-        Some(Token {
+        Some(Parsed {
             start: offset,
             end: offset + 1,
             value: TokenValue::Semicolon,
@@ -124,9 +118,9 @@ fn read_semicolon(offset: usize, input: &str) -> Option<Token> {
     }
 }
 
-fn read_dot(offset: usize, input: &str) -> Option<Token> {
+fn read_dot(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     if input.chars().next()? == '.' {
-        Some(Token {
+        Some(Parsed {
             start: offset,
             end: offset + 1,
             value: TokenValue::Dot,
@@ -136,9 +130,9 @@ fn read_dot(offset: usize, input: &str) -> Option<Token> {
     }
 }
 
-fn read_comma(offset: usize, input: &str) -> Option<Token> {
+fn read_comma(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     if input.chars().next()? == ',' {
-        Some(Token {
+        Some(Parsed {
             start: offset,
             end: offset + 1,
             value: TokenValue::Comma,
@@ -148,9 +142,9 @@ fn read_comma(offset: usize, input: &str) -> Option<Token> {
     }
 }
 
-fn read_colon(offset: usize, input: &str) -> Option<Token> {
+fn read_colon(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     if input.chars().next()? == ':' {
-        Some(Token {
+        Some(Parsed {
             start: offset,
             end: offset + 1,
             value: TokenValue::Colon,
@@ -160,14 +154,14 @@ fn read_colon(offset: usize, input: &str) -> Option<Token> {
     }
 }
 
-fn read_string(offset: usize, input: &str) -> Option<Token> {
+fn read_string(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     // TODO: unescape pasrsed string ("\n" should not be parsed as "\\n")
     let regex = Lazy::new(|| Regex::new(r#"^"[^"\\]*(\\.[^"\\]*)*""#).unwrap());
     let m = regex.deref().find(input)?;
     let string = &input[(m.start() + 1)..(m.end() - 1)];
     let value = TokenValue::String(string.to_owned());
 
-    Some(Token {
+    Some(Parsed {
         start: offset + m.start(),
         end: offset + m.end(),
         value,
@@ -186,7 +180,7 @@ impl<'a> TokenIterator<'a> {
 }
 
 impl<'a> Iterator for TokenIterator<'a> {
-    type Item = Result<Token, LexingError>;
+    type Item = Result<Parsed<TokenValue>, LexingError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let input: &str = self.input;
@@ -205,7 +199,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             .or_else(|| read_colon(*pos, &input[*pos..]))
             .or_else(|| read_separator(*pos, &input[*pos..]))
             .or_else(|| read_keyword(*pos, &input[*pos..]))
-            .or_else(|| Operator::read_greedy(*pos, &input[*pos..]))
+            .or_else(|| read_operator(*pos, &input[*pos..]))
             .or_else(|| read_string(*pos, &input[*pos..]))
             .or_else(|| read_float(*pos, &input[*pos..]))
             .or_else(|| read_integer(*pos, &input[*pos..]))
@@ -220,7 +214,7 @@ impl<'a> Iterator for TokenIterator<'a> {
     }
 }
 
-pub fn tokenize(input: &str) -> Result<Vec<Token>, LexingError> {
+pub fn tokenize(input: &str) -> Result<Vec<Parsed<TokenValue>>, LexingError> {
     let mut tokens = vec![];
     for token in TokenIterator::new(input) {
         tokens.push(token?);
