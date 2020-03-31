@@ -25,27 +25,27 @@ mod tests {
     #[test]
     fn test() {
         let src = r#"
-fibonacci = {
-    cache: [],
-    get_or_compute: function(n) {
-        cached = this.cache[n];
-        if (cached == null) {
-            computed = if(n < 3) {
-                1
-            } else {
-                this.get_or_compute(n - 2) + this.get_or_compute(n - 1)
+            fibonacci = {
+                cache: [],
+                get_or_compute: function(n) {
+                    cached = this.cache[n];
+                    if (cached == null) {
+                        computed = if(n < 3) {
+                            1
+                        } else {
+                            this.get_or_compute(n - 2) + this.get_or_compute(n - 1)
+                        };
+                        this.cache[n] = computed;
+                        computed
+                    } else {
+                        cached
+                    }
+                }
             };
-            this.cache[n] = computed;
-            computed
-        } else {
-            cached
-        }
-    }
-};
 
-fibonacci.get_or_compute(60);
-print(fibonacci.cache);
-"#;
+            fibonacci.get_or_compute(60);
+            print(fibonacci.cache);
+        "#;
         let mut interpreter = Interpreter::new();
 
         crate::library::StandardLibrary.register(&mut interpreter);
