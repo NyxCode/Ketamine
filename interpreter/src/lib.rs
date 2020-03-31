@@ -14,6 +14,55 @@ mod values;
 pub use crate::interpreter::*;
 use std::rc::Rc;
 
+#[cfg(test)]
+mod tests {
+    use crate::library::Library;
+    use crate::values::Object;
+    use crate::values::{NativeFunction, Value};
+    use crate::Interpreter;
+    use std::time::Instant;
+
+    #[test]
+    fn test() {
+        let src = r#"
+fibonacci = {
+    cache: [],
+    get_or_compute: function(n) {
+        cached = this.cache[n];
+        if (cached == null) {
+            computed = if(n < 3) {
+                1
+            } else {
+                this.get_or_compute(n - 2) + this.get_or_compute(n - 1)
+            };
+            this.cache[n] = computed;
+            computed
+        } else {
+            cached
+        }
+    }
+};
+
+fibonacci.get_or_compute(60);
+print(fibonacci.cache);
+"#;
+        let mut interpreter = Interpreter::new();
+
+        crate::library::StandardLibrary.register(&mut interpreter);
+        crate::library::Console.register(&mut interpreter);
+
+        let start = Instant::now();
+        match interpreter.eval(src) {
+            Ok(result) => println!("==> {}", result.to_string()),
+            Err(err) => report::report(src, err.start, err.end, err.value),
+        }
+        println!(
+            "{: >5}s execution time",
+            Instant::now().duration_since(start).as_secs()
+        );
+    }
+}
+
 trait Evaluate {
     fn eval(self, interpreter: &mut Interpreter) -> Result<Eval, Pos<String>>;
 }

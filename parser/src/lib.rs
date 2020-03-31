@@ -14,44 +14,6 @@ use crate::token_ext::TokenExt;
 pub use lexer::Pos;
 use lexer::TokenValue;
 
-/*
-fib = function(n) {
-            if (n < 3) {
-                1
-            } else {
-                fib(n - 2) + fib(n - 1)
-            }
-        };
-*/
-
-#[test]
-fn test() {
-    use crate::ast::Statement;
-    use crate::tree::TreeDisplay;
-    use lexer::tokenize;
-    use ptree::TreeBuilder;
-
-    let input = r#"
-        if (true) {
-
-        };
-        print("lol");
-    "#;
-    let mut tokens = &tokenize(input).unwrap()[..];
-    match <Vec<Pos<Statement>>>::parse(0, &mut tokens) {
-        Ok(statements) => {
-            let mut tree = TreeBuilder::new("code".to_owned());
-            for statement in statements.value {
-                statement.value.display(&mut tree);
-            }
-            ptree::print_tree(&tree.build()).unwrap();
-        }
-        Err(err) => {
-            report::report(input, err.start, err.end, err.value.into_inner());
-        }
-    }
-}
-
 fn find_closing_delimiter<'a>(
     mut pos: usize,
     mut tokens: &'a [Token],

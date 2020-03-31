@@ -12,66 +12,6 @@ mod instructions;
 mod literals;
 mod loops;
 
-#[cfg(test)]
-mod tests {
-    use crate::library::Library;
-    use crate::values::Object;
-    use crate::values::{NativeFunction, Value};
-    use crate::Interpreter;
-    use std::time::Instant;
-
-    #[test]
-    fn test() {
-        let src = r#"
-fibonacci = {
-    cache: [],
-    get_or_compute: function(n) {
-        cached = this.cache[n];
-        if (cached == null) {
-            computed = if(n < 3) {
-                1
-            } else {
-                this.get_or_compute(n - 2) + this.get_or_compute(n - 1)
-            };
-            this.cache[n] = computed;
-            computed
-        } else {
-            cached
-        }
-    }
-};
-
-fibonacci.get_or_compute(60)
-"#;
-        let mut interpreter = Interpreter::new();
-
-        crate::library::StandardLibrary.register(&mut interpreter);
-
-        let print = NativeFunction::new(|_this, args| {
-            let content = args
-                .into_iter()
-                .map(|v| v.to_string())
-                .collect::<Vec<_>>()
-                .join(" ");
-            println!("{}", content);
-            Ok(Value::Null)
-        });
-        interpreter
-            .scope
-            .push_var("print", Value::NativeFunction(print), false);
-
-        let start = Instant::now();
-        match interpreter.eval(src) {
-            Ok(result) => println!("==> {}", result.to_string()),
-            Err(err) => report::report(src, err.start, err.end, err.value),
-        }
-        println!(
-            "    took {}s",
-            Instant::now().duration_since(start).as_secs()
-        );
-    }
-}
-
 pub struct Interpreter {
     pub(crate) scope: ScopeStack,
     pub(crate) integer_proto: Dictionary,
@@ -85,7 +25,7 @@ pub struct Interpreter {
 }
 
 impl Interpreter {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let mut scope = ScopeStack::readonly_root();
 
         let integer_proto = Dictionary::default();
@@ -121,7 +61,7 @@ impl Interpreter {
         }
     }
 
-    fn eval(&mut self, src: &str) -> Result<Value, Pos<String>> {
+    pub fn eval(&mut self, src: &str) -> Result<Value, Pos<String>> {
         let tokens = lexer::tokenize(src)
             .map_err(|err| Pos::new(err.0, err.0, "could not tokenize".to_owned()))?;
         let mut tokens = &tokens[..];
@@ -154,7 +94,7 @@ impl Interpreter {
         proto.insert(ident.into(), value);
     }
 
-    pub fn get_proto(&self, val: &Value) -> &Dictionary {
+    pub(crate) fn get_proto(&self, val: &Value) -> &Dictionary {
         match val {
             Value::String(_) => &self.string_proto,
             Value::Integer(_) => &self.integer_proto,
@@ -166,11 +106,6 @@ impl Interpreter {
             Value::NativeFunction(_) => &self.function_proto,
             Value::Null => &self.null_proto,
         }
-    }
-
-    pub fn get_prototype_field(&self, val: &Value, field: &str) -> Value {
-        let prototype = self.get_proto(val);
-        prototype.get_field(field).unwrap_or(Value::Null)
     }
 
     pub(crate) fn scope<T>(

@@ -55,11 +55,11 @@ impl Object for Array {
             .try_into()
             .map_err(|_| "index out of range".to_owned())?;
         let mut array = self.0.borrow_mut();
-        if array.len() < idx {
-            let increase = idx - array.len();
+        if array.len() <= idx {
+            let increase = idx - array.len() + 1;
             array.extend_from_slice(&vec![Value::Null; increase]);
         }
-        array.insert(idx, val);
+        std::mem::replace(&mut array[idx], val);
         Ok(())
     }
 
