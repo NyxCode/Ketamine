@@ -36,7 +36,7 @@ pub use statement::*;
 use crate::error::{Error, ParseResult, ResultExt};
 use crate::first_value_of;
 use crate::token_ext::TokenExt;
-use lexer::TokenValue::BraceOpen;
+
 use std::convert::TryFrom;
 
 #[derive(Debug, Clone)]
@@ -108,7 +108,7 @@ impl Parse for AST {
                     value: TokenValue::BracketClose,
                     ..
                 }) => return Ok(ast),
-                Some(next) => ast = AST::append(ast, tokens)?,
+                Some(_next) => ast = AST::append(ast, tokens)?,
             };
         }
     }

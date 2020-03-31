@@ -1,7 +1,6 @@
 use crate::values::{ConcreteObject, Object, Value};
 use crate::Interpreter;
 use parser::ast::Ident;
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ops::Deref;

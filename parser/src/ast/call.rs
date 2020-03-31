@@ -1,4 +1,4 @@
-use crate::ast::{Ident, AST};
+use crate::ast::AST;
 use crate::{impl_into_enum, Pos};
 
 #[derive(Debug, Clone)]

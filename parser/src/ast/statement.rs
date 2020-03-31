@@ -18,7 +18,7 @@ impl Statement {
         }
     }
 
-    pub fn inner(&self) -> &Box<AST> {
+    pub fn inner(&self) -> &AST {
         match self {
             Statement::Unterminated(inner) => inner,
             Statement::Terminated(inner) => inner,
@@ -36,7 +36,6 @@ impl Parse for Statement {
             match tokens.peek(pos).ok() {
                 Some(Pos {
                     value: TokenValue::Semicolon,
-                    end,
                     ..
                 }) => {
                     tokens.pop_unwrap();
@@ -45,7 +44,7 @@ impl Parse for Statement {
                 None => {
                     return Ok(statement.map(Box::new).map(Statement::Unterminated));
                 }
-                Some(next) => statement = AST::append(statement, tokens)?.map(Into::<AST>::into),
+                Some(_next) => statement = AST::append(statement, tokens)?.map(Into::<AST>::into),
             };
         }
     }

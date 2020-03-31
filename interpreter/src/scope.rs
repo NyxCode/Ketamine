@@ -1,5 +1,5 @@
 use crate::values::Value;
-use parser::ast::Ident;
+
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -33,8 +33,7 @@ impl ScopeStack {
             .scopes
             .iter_mut()
             .rev()
-            .filter(|scope| force || !scope.readonly)
-            .next()
+            .find(|scope| force || !scope.readonly)
             .unwrap();
         scope.variables.insert(ident.into(), var)
     }

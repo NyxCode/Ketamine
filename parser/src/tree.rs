@@ -18,7 +18,7 @@ impl TreeDisplay for Ident {
 
 impl TreeDisplay for Return {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("return"));
+        tree.begin_child("return".to_owned());
         if let Some(val) = &self.0 {
             val.value.deref().display(tree);
         }
@@ -27,7 +27,7 @@ impl TreeDisplay for Return {
 }
 impl TreeDisplay for Break {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("break"));
+        tree.begin_child("break".to_owned());
         if let Some(val) = &self.0 {
             val.value.deref().display(tree);
         }
@@ -37,17 +37,17 @@ impl TreeDisplay for Break {
 
 impl TreeDisplay for Continue {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.add_empty_child(format!("continue"));
+        tree.add_empty_child("continue".to_owned());
     }
 }
 
 impl TreeDisplay for Assignment {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("assignment"));
-        tree.begin_child(format!("receiver"));
+        tree.begin_child("assignment".to_owned());
+        tree.begin_child("receiver".to_owned());
         self.receiver.value.display(tree);
         tree.end_child();
-        tree.begin_child(format!("value"));
+        tree.begin_child("value".to_owned());
         self.value.value.display(tree);
         tree.end_child();
         tree.end_child();
@@ -56,11 +56,11 @@ impl TreeDisplay for Assignment {
 
 impl TreeDisplay for FieldAccess {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("field_access"));
-        tree.begin_child(format!("value"));
+        tree.begin_child("field_access".to_owned());
+        tree.begin_child("value".to_owned());
         self.value.value.display(tree);
         tree.end_child();
-        tree.begin_child(format!("field"));
+        tree.begin_child("field".to_owned());
         self.field.value.display(tree);
         tree.end_child();
         tree.end_child();
@@ -69,11 +69,11 @@ impl TreeDisplay for FieldAccess {
 
 impl TreeDisplay for Index {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("index"));
-        tree.begin_child(format!("value"));
+        tree.begin_child("index".to_owned());
+        tree.begin_child("value".to_owned());
         self.value.value.display(tree);
         tree.end_child();
-        tree.begin_child(format!("index"));
+        tree.begin_child("index".to_owned());
         self.index.value.display(tree);
         tree.end_child();
         tree.end_child();
@@ -82,13 +82,13 @@ impl TreeDisplay for Index {
 
 impl TreeDisplay for Function {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("function"));
-        tree.begin_child(format!("args"));
+        tree.begin_child("function".to_owned());
+        tree.begin_child("args".to_owned());
         for arg in &self.params {
             arg.value.display(tree);
         }
         tree.end_child();
-        tree.begin_child(format!("body"));
+        tree.begin_child("body".to_owned());
         for statement in &self.body {
             statement.value.display(tree);
         }
@@ -99,10 +99,10 @@ impl TreeDisplay for Function {
 
 impl TreeDisplay for IfBranch {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("condition"));
+        tree.begin_child("condition".to_owned());
         self.condition.value.display(tree);
         tree.end_child();
-        tree.begin_child(format!("body"));
+        tree.begin_child("body".to_owned());
         for body_statement in &self.body {
             body_statement.value.display(tree);
         }
@@ -112,15 +112,15 @@ impl TreeDisplay for IfBranch {
 
 impl TreeDisplay for If {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("if"));
+        tree.begin_child("if".to_owned());
         self.if_branch.value.display(tree);
         for else_if in &self.else_if_branches {
-            tree.begin_child(format!("else_if"));
+            tree.begin_child("else_if".to_owned());
             else_if.value.display(tree);
             tree.end_child();
         }
         if let Some(else_) = &self.else_branch {
-            tree.begin_child(format!("else"));
+            tree.begin_child("else".to_owned());
             for statement in else_ {
                 statement.value.display(tree);
             }
@@ -132,12 +132,12 @@ impl TreeDisplay for If {
 
 impl TreeDisplay for BinaryOperation {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("binary_operation"));
-        tree.begin_child(format!("lhs"));
+        tree.begin_child("binary_operation".to_owned());
+        tree.begin_child("lhs".to_owned());
         self.lhs.value.display(tree);
         tree.end_child();
         tree.add_empty_child(format!("operator: {:?}", self.op.value));
-        tree.begin_child(format!("rhs"));
+        tree.begin_child("rhs".to_owned());
         self.rhs.value.display(tree);
         tree.end_child();
         tree.end_child();
@@ -146,7 +146,7 @@ impl TreeDisplay for BinaryOperation {
 
 impl TreeDisplay for Parentheses {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("parentheses"));
+        tree.begin_child("parentheses".to_owned());
         self.0.value.display(tree);
         tree.end_child();
     }
@@ -154,11 +154,11 @@ impl TreeDisplay for Parentheses {
 
 impl TreeDisplay for Call {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("call"));
-        tree.begin_child(format!("value"));
+        tree.begin_child("call".to_owned());
+        tree.begin_child("value".to_owned());
         self.value.value.display(tree);
         tree.end_child();
-        tree.begin_child(format!("args"));
+        tree.begin_child("args".to_owned());
         for arg in &self.args {
             arg.value.display(tree);
         }
@@ -169,7 +169,7 @@ impl TreeDisplay for Call {
 
 impl TreeDisplay for List {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("list"));
+        tree.begin_child("list".to_owned());
         for element in &self.0 {
             element.value.display(tree);
         }
@@ -179,9 +179,9 @@ impl TreeDisplay for List {
 
 impl TreeDisplay for Object {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("object"));
+        tree.begin_child("object".to_owned());
         for (k, v) in &self.0 {
-            tree.begin_child(format!("entry"));
+            tree.begin_child("entry".to_owned());
             k.value.display(tree);
             v.value.display(tree);
             tree.end_child();
@@ -192,11 +192,11 @@ impl TreeDisplay for Object {
 
 impl TreeDisplay for Range {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("range"));
-        tree.begin_child(format!("from"));
+        tree.begin_child("range".to_owned());
+        tree.begin_child("from".to_owned());
         self.from.value.display(tree);
         tree.end_child();
-        tree.begin_child(format!("to"));
+        tree.begin_child("to".to_owned());
         self.to.value.display(tree);
         tree.end_child();
         tree.end_child();
@@ -205,11 +205,11 @@ impl TreeDisplay for Range {
 
 impl TreeDisplay for WhileLoop {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("while"));
-        tree.begin_child(format!("condition"));
+        tree.begin_child("while".to_owned());
+        tree.begin_child("condition".to_owned());
         self.condition.value.display(tree);
         tree.end_child();
-        tree.begin_child(format!("body"));
+        tree.begin_child("body".to_owned());
         for statement in &self.body {
             statement.value.display(tree);
         }
@@ -220,15 +220,15 @@ impl TreeDisplay for WhileLoop {
 
 impl TreeDisplay for ForLoop {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("for"));
-        tree.begin_child(format!("binding"));
+        tree.begin_child("for".to_owned());
+        tree.begin_child("binding".to_owned());
         self.binding.value.display(tree);
         tree.end_child();
-        tree.begin_child(format!("iterator"));
+        tree.begin_child("iterator".to_owned());
         self.iterator.value.display(tree);
         tree.end_child();
 
-        tree.begin_child(format!("body"));
+        tree.begin_child("body".to_owned());
         for statement in &self.body {
             statement.value.display(tree);
         }
@@ -239,9 +239,9 @@ impl TreeDisplay for ForLoop {
 
 impl TreeDisplay for UnaryOperation {
     fn display(&self, tree: &mut TreeBuilder) {
-        tree.begin_child(format!("unary_operation"));
+        tree.begin_child("unary_operation".to_owned());
         tree.add_empty_child(format!("operator: {:?}", self.op.value));
-        tree.begin_child(format!("value"));
+        tree.begin_child("value".to_owned());
         self.value.value.display(tree);
         tree.end_child();
         tree.end_child();
@@ -289,12 +289,12 @@ impl TreeDisplay for Statement {
     fn display(&self, tree: &mut TreeBuilder) {
         match self {
             Statement::Unterminated(ast) => {
-                tree.begin_child(format!("unterminated"));
+                tree.begin_child("unterminated".to_owned());
                 ast.display(tree);
                 tree.end_child();
             }
             Statement::Terminated(ast) => {
-                tree.begin_child(format!("terminated"));
+                tree.begin_child("terminated".to_owned());
                 ast.display(tree);
                 tree.end_child();
             }

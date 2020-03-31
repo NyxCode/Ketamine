@@ -16,11 +16,9 @@ pub use integer::*;
 pub use null::*;
 pub use string::*;
 
-use crate::scope::ScopeStack;
-use crate::{Eval, Interpreter};
+use crate::Interpreter;
 use parser::ast::{BinaryOperator, Ident};
 use parser::Pos;
-use std::convert::TryInto;
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -74,30 +72,30 @@ pub trait Object {
     fn into_value(self) -> Value;
     fn to_string(&self) -> String;
 
-    fn binary_op(&self, op: BinaryOperator, rhs: &Value) -> Result<Value, ()> {
+    fn binary_op(&self, _op: BinaryOperator, _rhs: &Value) -> Result<Value, ()> {
         Err(())
     }
     fn call(
         &self,
         start: usize,
         end: usize,
-        scope: &mut Interpreter,
-        this: Value,
-        args: Vec<Value>,
+        _scope: &mut Interpreter,
+        _this: Value,
+        _args: Vec<Value>,
     ) -> Result<Value, Pos<String>> {
         let msg = format!("can't call a value of type {}", self.type_name());
         Err(Pos::new(start, end, msg))
     }
-    fn get_index(&self, idx: &Value) -> Option<Value> {
+    fn get_index(&self, _idx: &Value) -> Option<Value> {
         None
     }
-    fn set_index(&self, idx: Value, val: Value) -> Result<(), String> {
+    fn set_index(&self, _idx: Value, _val: Value) -> Result<(), String> {
         Err(format!("can't assign to index of {}", self.type_name()))
     }
-    fn get_field(&self, field: &str) -> Option<Value> {
+    fn get_field(&self, _field: &str) -> Option<Value> {
         None
     }
-    fn set_field(&self, idx: Ident, val: Value) -> Result<(), String> {
+    fn set_field(&self, idx: Ident, _val: Value) -> Result<(), String> {
         Err(format!(
             "can't assign to field {} of {}",
             idx.0,

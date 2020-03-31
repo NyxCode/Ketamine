@@ -1,13 +1,9 @@
-use crate::library::Library;
 use crate::scope::ScopeStack;
 use crate::values::Object;
-use crate::values::{Array, ConcreteObject, Dictionary, NativeFunction, Value};
+use crate::values::{ConcreteObject, Dictionary, NativeFunction, Value};
 use crate::Evaluate;
-use parser::ast::{Ident, Statement};
+use parser::ast::Statement;
 use parser::{Parse, Pos};
-use std::collections::HashMap;
-use std::ops::Deref;
-use std::time::Instant;
 
 mod assignment;
 mod branching;
@@ -16,9 +12,17 @@ mod instructions;
 mod literals;
 mod loops;
 
-#[test]
-fn test() {
-    let src = r#"
+#[cfg(test)]
+mod tests {
+    use crate::library::Library;
+    use crate::values::Object;
+    use crate::values::{NativeFunction, Value};
+    use crate::Interpreter;
+    use std::time::Instant;
+
+    #[test]
+    fn test() {
+        let src = r#"
 fibonacci = {
     cache: [],
     get_or_compute: function(n) {
@@ -39,32 +43,33 @@ fibonacci = {
 
 fibonacci.get_or_compute(60)
 "#;
-    let mut interpreter = Interpreter::new();
+        let mut interpreter = Interpreter::new();
 
-    crate::library::StandardLibrary.register(&mut interpreter);
+        crate::library::StandardLibrary.register(&mut interpreter);
 
-    let print = NativeFunction::new(|this, args| {
-        let content = args
-            .into_iter()
-            .map(|v| v.to_string())
-            .collect::<Vec<_>>()
-            .join(" ");
-        println!("{}", content);
-        Ok(Value::Null)
-    });
-    interpreter
-        .scope
-        .push_var("print", Value::NativeFunction(print), false);
+        let print = NativeFunction::new(|_this, args| {
+            let content = args
+                .into_iter()
+                .map(|v| v.to_string())
+                .collect::<Vec<_>>()
+                .join(" ");
+            println!("{}", content);
+            Ok(Value::Null)
+        });
+        interpreter
+            .scope
+            .push_var("print", Value::NativeFunction(print), false);
 
-    let start = Instant::now();
-    match interpreter.eval(src) {
-        Ok(result) => println!("==> {}", result.to_string()),
-        Err(err) => report::report(src, err.start, err.end, err.value),
+        let start = Instant::now();
+        match interpreter.eval(src) {
+            Ok(result) => println!("==> {}", result.to_string()),
+            Err(err) => report::report(src, err.start, err.end, err.value),
+        }
+        println!(
+            "    took {}s",
+            Instant::now().duration_since(start).as_secs()
+        );
     }
-    println!(
-        "    took {}s",
-        Instant::now().duration_since(start).as_secs()
-    );
 }
 
 pub struct Interpreter {
@@ -118,7 +123,7 @@ impl Interpreter {
 
     fn eval(&mut self, src: &str) -> Result<Value, Pos<String>> {
         let tokens = lexer::tokenize(src)
-            .map_err(|err| Pos::new(err.0, err.0, format!("could not tokenize")))?;
+            .map_err(|err| Pos::new(err.0, err.0, "could not tokenize".to_owned()))?;
         let mut tokens = &tokens[..];
         let statements = <Vec<Pos<Statement>>>::parse(0, &mut tokens)
             .map_err(|err| err.map(|x| x.into_inner().to_string()))?

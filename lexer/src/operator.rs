@@ -1,5 +1,4 @@
 use crate::{Pos, TokenValue};
-use std::fmt::{Display, Formatter, Result as FmtResult};
 
 fn read_single_char(input: &str) -> Option<TokenValue> {
     if input.is_empty() {

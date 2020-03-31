@@ -1,5 +1,5 @@
 use crate::ast::AST;
-use crate::error::{ParseResult, ResultExt, Severity};
+use crate::error::{ParseResult, ResultExt};
 use crate::impl_into_enum;
 use crate::token_ext::TokenExt;
 use crate::{find_closing_delimiter, Parse, Pos, Token};

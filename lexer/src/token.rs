@@ -1,5 +1,4 @@
-use std::fmt::{Debug, Display, Error, Formatter, Result as FmtResult};
-use std::ops::Deref;
+use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
 pub struct Pos<T> {
     pub start: usize,

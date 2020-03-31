@@ -1,7 +1,6 @@
-use crate::scope::ScopeStack;
-use crate::values::{Dictionary, Object, Value};
-use crate::{Eval, Evaluate, Interpreter};
-use parser::ast::Ident;
+use crate::values::{Object, Value};
+use crate::{Evaluate, Interpreter};
+
 use parser::Pos;
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter, Result as FmtResult};
@@ -35,8 +34,8 @@ impl Object for Function {
 
     fn call(
         &self,
-        start: usize,
-        end: usize,
+        _start: usize,
+        _end: usize,
         interpreter: &mut Interpreter,
         this: Value,
         mut args: Vec<Value>,
@@ -78,7 +77,7 @@ impl Object for NativeFunction {
         &self,
         start: usize,
         end: usize,
-        scope: &mut Interpreter,
+        _scope: &mut Interpreter,
         this: Value,
         args: Vec<Value>,
     ) -> Result<Value, Pos<String>> {

@@ -1,5 +1,5 @@
 use crate::ast::AST;
-use crate::error::{Error, ParseResult, ResultExt, Severity};
+use crate::error::{Error, ParseResult, ResultExt};
 use crate::token_ext::TokenExt;
 use crate::{impl_into_enum, Parse, Token};
 use lexer::{Pos, TokenValue};
@@ -20,7 +20,7 @@ pub enum BinaryOperator {
 }
 
 impl BinaryOperator {
-    pub fn precedence(&self) -> u8 {
+    pub fn precedence(self) -> u8 {
         use BinaryOperator::*;
         match self {
             Eq | NotEq | GreaterThan | LessThan | GreaterEqThan | LessEqThan => 0,
@@ -29,7 +29,7 @@ impl BinaryOperator {
         }
     }
 
-    pub fn verb(&self) -> (&'static str, &'static str) {
+    pub fn verb(self) -> (&'static str, &'static str) {
         match self {
             BinaryOperator::Add => ("add", "to"),
             BinaryOperator::Sub => ("subtract", "from"),

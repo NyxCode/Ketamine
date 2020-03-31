@@ -1,7 +1,7 @@
 use crate::values::{ConcreteObject, Dictionary, Object, Value};
 use crate::Interpreter;
 use parser::ast::BinaryOperator;
-use std::str::FromStr;
+use std::f64::EPSILON;
 
 impl Object for i64 {
     fn type_name(&self) -> &'static str {
@@ -41,12 +41,12 @@ impl Object for i64 {
             },
             BinaryOperator::Eq => match rhs {
                 Value::Integer(rhs) => Ok(Value::Boolean(*self == *rhs)),
-                Value::Float(rhs) => Ok(Value::Boolean(*self as f64 == *rhs)),
+                Value::Float(rhs) => Ok(Value::Boolean((*self as f64 - *rhs).abs() < EPSILON)),
                 _ => Ok(Value::Boolean(false)),
             },
             BinaryOperator::NotEq => match rhs {
                 Value::Integer(rhs) => Ok(Value::Boolean(*self != *rhs)),
-                Value::Float(rhs) => Ok(Value::Boolean(*self as f64 != *rhs)),
+                Value::Float(rhs) => Ok(Value::Boolean((*self as f64 - *rhs).abs() > EPSILON)),
                 _ => Ok(Value::Boolean(false)),
             },
             BinaryOperator::GreaterThan => match rhs {

@@ -1,6 +1,5 @@
 use crate::values::{ConcreteObject, Dictionary, Object, Value};
 use crate::Interpreter;
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::convert::TryInto;
 use std::ops::Deref;

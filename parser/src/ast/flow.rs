@@ -46,12 +46,12 @@ impl Parse for Break {
             .pop_expect(pos, &TokenValue::BreakKeyword)
             .into_recoverable()?;
         let next = match tokens.peek(keyword.end).ok() {
-            Some(next) => next,
             None
             | Some(Pos {
                 value: TokenValue::Semicolon,
                 ..
             }) => return Ok(keyword.clone().map(|_| Break(None))),
+            Some(next) => next,
         };
 
         let value = AST::parse(next.start, tokens)?;

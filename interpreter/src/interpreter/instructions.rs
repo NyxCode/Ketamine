@@ -17,7 +17,7 @@ impl Evaluate for Pos<Return> {
                 .try_into_value()
                 .map_err(|err| Pos::new(start, end, err))?,
         };
-        return Ok(Eval::Return(value));
+        Ok(Eval::Return(value))
     }
 }
 
@@ -35,6 +35,6 @@ impl Evaluate for Pos<Break> {
                 .try_into_value()
                 .map_err(|err| Pos::new(start, end, err))?,
         };
-        return Ok(Eval::Break(value));
+        Ok(Eval::Break(value))
     }
 }

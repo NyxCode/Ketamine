@@ -1,17 +1,10 @@
 #![deny(unused_mut, unreachable_patterns)]
 
-use crate::scope::ScopeStack;
-use crate::values::{Array, ConcreteObject, Dictionary, NativeFunction, Object, Value};
-use lexer::{tokenize, Pos};
-use parser::ast::{
-    Assignment, BinaryOperator, Break, Call, Continue, FieldAccess, ForLoop, Function, Ident,
-    IfBranch, Index, Parentheses, Range, Return, Statement, UnaryOperator, AST,
-};
-use parser::Parse;
-use std::borrow::Borrow;
-use std::cell::{Cell, RefCell};
-use std::fmt::{Debug, Formatter, Result as FmtResult};
-use std::ops::Deref;
+use crate::values::{Object, Value};
+use lexer::Pos;
+use parser::ast::{Call, FieldAccess, Ident, Index, Parentheses, Statement, AST};
+
+use std::fmt::Debug;
 
 mod interpreter;
 mod library;

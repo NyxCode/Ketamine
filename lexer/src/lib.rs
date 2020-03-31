@@ -10,7 +10,7 @@ mod keywords;
 mod operator;
 mod token;
 
-pub use operator::*;
+use operator::*;
 pub use token::*;
 
 #[derive(Debug)]
@@ -31,7 +31,7 @@ impl LexingError {
 fn skip_whitespace(input: &str) -> usize {
     input
         .find(|c: char| !c.is_whitespace())
-        .unwrap_or(input.len())
+        .unwrap_or_else(|| input.len())
 }
 
 fn read_integer(offset: usize, input: &str) -> Option<Pos<TokenValue>> {

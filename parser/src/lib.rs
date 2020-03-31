@@ -7,13 +7,12 @@ pub mod macros;
 pub mod token_ext;
 pub mod tree;
 
-use crate::ast::{Statement, AST};
+use crate::ast::AST;
 use crate::error::{Error, ParseResult, ResultExt, Severity};
 use crate::token_ext::TokenExt;
-use crate::tree::TreeDisplay;
+
 pub use lexer::Pos;
-use lexer::{tokenize, TokenValue};
-use ptree::TreeBuilder;
+use lexer::TokenValue;
 
 /*
 fib = function(n) {
@@ -27,6 +26,11 @@ fib = function(n) {
 
 #[test]
 fn test() {
+    use crate::ast::Statement;
+    use crate::tree::TreeDisplay;
+    use lexer::tokenize;
+    use ptree::TreeBuilder;
+
     let input = r#"
         if (true) {
 
@@ -88,7 +92,7 @@ where
     let mut list = vec![];
     let close_token = loop {
         let next = tokens.peek(pos)?;
-        if &next.value == &close {
+        if next.value == close {
             tokens.pop_unwrap();
             break next;
         }
@@ -98,10 +102,10 @@ where
         list.push(element);
 
         let next = tokens.peek(pos)?;
-        if &next.value == &close {
+        if next.value == close {
             tokens.pop_unwrap();
             break next;
-        } else if &next.value == &delimiter {
+        } else if next.value == delimiter {
             tokens.pop_unwrap();
         }
     };

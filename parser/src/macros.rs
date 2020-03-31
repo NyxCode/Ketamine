@@ -1,6 +1,6 @@
-use crate::error::{Error, ParseResult, Severity};
+use crate::error::{ParseResult, Severity};
 use crate::{ast::AST, Parse, Token, TryParse};
-use lexer::{Pos, TokenValue};
+use lexer::Pos;
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 
 pub enum ParseEither<A, B> {
