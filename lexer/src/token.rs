@@ -1,15 +1,18 @@
-use std::fmt::{Display, Formatter, Result as FmtResult, Debug, Error};
+use std::fmt::{Debug, Display, Error, Formatter, Result as FmtResult};
 use std::ops::Deref;
 
-pub struct Parsed<T> {
+pub struct Pos<T> {
     pub start: usize,
     pub end: usize,
     pub value: T,
 }
 
-impl<T> Clone for Parsed<T> where T: Clone {
+impl<T> Clone for Pos<T>
+where
+    T: Clone,
+{
     fn clone(&self) -> Self {
-        Parsed {
+        Pos {
             start: self.start,
             end: self.end,
             value: self.value.clone(),
@@ -17,30 +20,42 @@ impl<T> Clone for Parsed<T> where T: Clone {
     }
 }
 
-impl<T> Debug for Parsed<T> where T: Debug {
+impl<T> Debug for Pos<T>
+where
+    T: Debug,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "Parsed({}..{}: {:?})", self.start, self.end, self.value)
     }
 }
 
-impl<T> PartialEq for Parsed<T> where T: PartialEq {
+impl<T> PartialEq for Pos<T>
+where
+    T: PartialEq,
+{
     fn eq(&self, other: &Self) -> bool {
-        self.start == other.start &&
-            self.end == other.end &&
-            self.value == other.value
+        self.start == other.start && self.end == other.end && self.value == other.value
     }
 }
 
-impl<T> Parsed<T> {
+impl<T> Pos<T> {
     pub fn new(start: usize, end: usize, value: T) -> Self {
-        Parsed { start, end, value }
+        Pos { start, end, value }
     }
 
-    pub fn map<O>(self, map: impl FnOnce(T) -> O) -> Parsed<O> {
-        Parsed {
+    pub fn map<O>(self, map: impl FnOnce(T) -> O) -> Pos<O> {
+        Pos {
             start: self.start,
             end: self.end,
             value: map(self.value),
+        }
+    }
+
+    pub fn as_ref(&self) -> Pos<&T> {
+        Pos {
+            start: self.start,
+            end: self.end,
+            value: &self.value,
         }
     }
 }
@@ -88,7 +103,6 @@ pub enum TokenValue {
     ElseKeyword,
     ForKeyword,
     InKeyword,
-    LoopKeyword,
     WhileKeyword,
 }
 
@@ -125,7 +139,6 @@ impl TokenValue {
             TokenValue::ElseKeyword => "else",
             TokenValue::ForKeyword => "for",
             TokenValue::InKeyword => "in",
-            TokenValue::LoopKeyword => "loop",
             TokenValue::WhileKeyword => "while",
             TokenValue::Add => "+",
             TokenValue::Sub => "-",

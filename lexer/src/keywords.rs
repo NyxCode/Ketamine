@@ -1,4 +1,4 @@
-use crate::{read_semicolon, read_separator, TokenValue, Parsed};
+use crate::{read_semicolon, read_separator, Pos, TokenValue};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::ops::Deref;
@@ -10,7 +10,7 @@ fn is_separate_token(input: &str) -> bool {
         || read_semicolon(0, input).is_some()
 }
 
-pub(crate) fn read_keyword(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
+pub(crate) fn read_keyword(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     static KEYWORDS: Lazy<HashMap<&'static str, TokenValue>> = Lazy::new(|| {
         let mut keywords = HashMap::new();
         keywords.insert("function", TokenValue::FunctionKeyword);
@@ -21,7 +21,6 @@ pub(crate) fn read_keyword(offset: usize, input: &str) -> Option<Parsed<TokenVal
         keywords.insert("else", TokenValue::ElseKeyword);
         keywords.insert("for", TokenValue::ForKeyword);
         keywords.insert("in", TokenValue::InKeyword);
-        keywords.insert("loop", TokenValue::LoopKeyword);
         keywords.insert("while", TokenValue::WhileKeyword);
         keywords.insert("true", TokenValue::Boolean(true));
         keywords.insert("false", TokenValue::Boolean(false));
@@ -35,7 +34,7 @@ pub(crate) fn read_keyword(offset: usize, input: &str) -> Option<Parsed<TokenVal
             let keyword: &'static str = keyword;
             input.starts_with(&keyword) && is_separate_token(&input[keyword.len()..])
         })
-        .map(|(keyword, value)| Parsed {
+        .map(|(keyword, value)| Pos {
             start: offset,
             end: offset + keyword.len(),
             value: value.clone(),

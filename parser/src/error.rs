@@ -1,7 +1,7 @@
-use lexer::{TokenValue, Parsed};
+use lexer::{Pos, TokenValue};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-pub type ParseResult<'a, T> = Result<Parsed<T>, Parsed<Severity<'a>>>;
+pub type ParseResult<'a, T> = Result<Pos<T>, Pos<Severity<'a>>>;
 
 #[derive(Debug)]
 pub enum Severity<'a> {
@@ -13,7 +13,7 @@ impl<'a> Severity<'a> {
     pub fn into_inner(self) -> Error<'a> {
         match self {
             Severity::Fatal(err) => err,
-            Severity::Recoverable(err) => err
+            Severity::Recoverable(err) => err,
         }
     }
 
@@ -31,7 +31,7 @@ pub trait ResultExt {
     fn into_recoverable(self) -> Self;
 }
 
-impl <'a, T> ResultExt for Result<T, Parsed<Severity<'a>>> {
+impl<'a, T> ResultExt for Result<T, Pos<Severity<'a>>> {
     fn into_fatal(self) -> Self {
         self.map_err(|err| err.map(Severity::into_fatal))
     }
@@ -64,7 +64,10 @@ impl<'a> Display for Error<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             Error::Missing(missing) => write!(f, "missing {}", missing),
-            Error::Unexpected { unexpected, expected } => write!(f, "expected {}, got {}", expected, unexpected),
+            Error::Unexpected {
+                unexpected,
+                expected,
+            } => write!(f, "expected {}, got {}", expected, unexpected),
         }
     }
 }

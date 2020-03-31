@@ -10,7 +10,11 @@ pub fn report(src: &str, start: usize, end: usize, msg: impl Display) {
 
     println!("{: >3} | {}", line_idx + 1, trimmed_line);
     let marker_offset = " ".repeat(char_in_line + 6);
-    println!("{}{}", marker_offset, "^".repeat((end - start).max(1)));
+    println!(
+        "{}{}",
+        marker_offset,
+        "^".repeat((end - start).max(1).min(trimmed_line.len()))
+    );
     println!("      {}", msg)
 }
 

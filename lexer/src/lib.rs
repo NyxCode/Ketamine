@@ -10,11 +10,11 @@ mod keywords;
 mod operator;
 mod token;
 
-pub use token::*;
 pub use operator::*;
+pub use token::*;
 
 #[derive(Debug)]
-pub struct LexingError(usize);
+pub struct LexingError(pub usize);
 
 impl Display for LexingError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
@@ -34,7 +34,7 @@ fn skip_whitespace(input: &str) -> usize {
         .unwrap_or(input.len())
 }
 
-fn read_integer(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
+fn read_integer(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     let regex = Lazy::new(|| Regex::new(r#"^\d+"#).unwrap());
 
     let m = regex.deref().find(input)?;
@@ -42,14 +42,14 @@ fn read_integer(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
         .map(TokenValue::Integer)
         .expect("ICE");
 
-    Some(Parsed {
+    Some(Pos {
         start: offset + m.start(),
         end: offset + m.end(),
         value,
     })
 }
 
-fn read_float(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
+fn read_float(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     let regex = Lazy::new(|| Regex::new(r#"^\d+\.\d+"#).unwrap());
 
     let m = regex.deref().find(input)?;
@@ -57,27 +57,27 @@ fn read_float(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
         .map(TokenValue::Float)
         .expect("ICE");
 
-    Some(Parsed {
+    Some(Pos {
         start: offset + m.start(),
         end: offset + m.end(),
         value,
     })
 }
 
-fn read_ident(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
-    let regex = Lazy::new(|| Regex::new(r#"^[A-Za-z_]+[A-Za-z0-9_]*"#).unwrap());
+fn read_ident(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
+    let regex = Lazy::new(|| Regex::new(r#"^[$A-Za-z_]+[$A-Za-z0-9_]*"#).unwrap());
 
     let m = regex.deref().find(input)?;
     let value = TokenValue::Identifier(m.as_str().to_owned());
 
-    Some(Parsed {
+    Some(Pos {
         start: offset + m.start(),
         end: offset + m.end(),
         value,
     })
 }
 
-fn read_separator(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
+fn read_separator(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     let value = match input.chars().next()? {
         '(' => TokenValue::ParenthesesOpen,
         ')' => TokenValue::ParenthesesClose,
@@ -87,16 +87,16 @@ fn read_separator(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
         '}' => TokenValue::BraceClose,
         _ => return None,
     };
-    Some(Parsed {
+    Some(Pos {
         start: offset,
         end: offset + 1,
         value,
     })
 }
 
-fn read_range(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
+fn read_range(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     if input.starts_with("..") {
-        Some(Parsed {
+        Some(Pos {
             start: offset,
             end: offset + 2,
             value: TokenValue::Range,
@@ -106,9 +106,9 @@ fn read_range(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     }
 }
 
-fn read_semicolon(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
+fn read_semicolon(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     if input.chars().next()? == ';' {
-        Some(Parsed {
+        Some(Pos {
             start: offset,
             end: offset + 1,
             value: TokenValue::Semicolon,
@@ -118,9 +118,9 @@ fn read_semicolon(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     }
 }
 
-fn read_dot(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
+fn read_dot(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     if input.chars().next()? == '.' {
-        Some(Parsed {
+        Some(Pos {
             start: offset,
             end: offset + 1,
             value: TokenValue::Dot,
@@ -130,9 +130,9 @@ fn read_dot(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     }
 }
 
-fn read_comma(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
+fn read_comma(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     if input.chars().next()? == ',' {
-        Some(Parsed {
+        Some(Pos {
             start: offset,
             end: offset + 1,
             value: TokenValue::Comma,
@@ -142,9 +142,9 @@ fn read_comma(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     }
 }
 
-fn read_colon(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
+fn read_colon(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     if input.chars().next()? == ':' {
-        Some(Parsed {
+        Some(Pos {
             start: offset,
             end: offset + 1,
             value: TokenValue::Colon,
@@ -154,14 +154,14 @@ fn read_colon(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
     }
 }
 
-fn read_string(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
+fn read_string(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     // TODO: unescape pasrsed string ("\n" should not be parsed as "\\n")
     let regex = Lazy::new(|| Regex::new(r#"^"[^"\\]*(\\.[^"\\]*)*""#).unwrap());
     let m = regex.deref().find(input)?;
     let string = &input[(m.start() + 1)..(m.end() - 1)];
     let value = TokenValue::String(string.to_owned());
 
-    Some(Parsed {
+    Some(Pos {
         start: offset + m.start(),
         end: offset + m.end(),
         value,
@@ -180,7 +180,7 @@ impl<'a> TokenIterator<'a> {
 }
 
 impl<'a> Iterator for TokenIterator<'a> {
-    type Item = Result<Parsed<TokenValue>, LexingError>;
+    type Item = Result<Pos<TokenValue>, LexingError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let input: &str = self.input;
@@ -214,11 +214,10 @@ impl<'a> Iterator for TokenIterator<'a> {
     }
 }
 
-pub fn tokenize(input: &str) -> Result<Vec<Parsed<TokenValue>>, LexingError> {
+pub fn tokenize(input: &str) -> Result<Vec<Pos<TokenValue>>, LexingError> {
     let mut tokens = vec![];
     for token in TokenIterator::new(input) {
         tokens.push(token?);
     }
     Ok(tokens)
 }
-

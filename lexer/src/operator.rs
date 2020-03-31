@@ -1,4 +1,4 @@
-use crate::{Parsed, TokenValue};
+use crate::{Pos, TokenValue};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 fn read_single_char(input: &str) -> Option<TokenValue> {
@@ -31,12 +31,12 @@ fn read_two_chars(input: &str) -> Option<TokenValue> {
     }
 }
 
-pub(crate) fn read_operator(offset: usize, input: &str) -> Option<Parsed<TokenValue>> {
+pub(crate) fn read_operator(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     let (op, len) = read_two_chars(input)
         .map(|op| (op, 2))
         .or_else(|| read_single_char(input).map(|op| (op, 1)))?;
 
-    Some(Parsed {
+    Some(Pos {
         start: offset,
         end: offset + len,
         value: op,

@@ -1,6 +1,6 @@
-use crate::{Parse, Token, AST, TryParse};
-use lexer::{Parsed, TokenValue};
 use crate::error::{Error, ParseResult, Severity};
+use crate::{ast::AST, Parse, Token, TryParse};
+use lexer::{Pos, TokenValue};
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 
 pub enum ParseEither<A, B> {
@@ -8,7 +8,11 @@ pub enum ParseEither<A, B> {
     B(B),
 }
 
-impl<A, B> Debug for ParseEither<A, B> where A: Debug, B: Debug {
+impl<A, B> Debug for ParseEither<A, B>
+where
+    A: Debug,
+    B: Debug,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             ParseEither::A(a) => write!(f, "ParseEither::A({:?})", a),
@@ -21,8 +25,18 @@ impl<A: Parse, B: Parse> Parse for ParseEither<A, B> {
     fn parse<'a>(pos: usize, tokens: &mut &'a [Token]) -> ParseResult<'a, Self> {
         match A::try_parse(pos, tokens) {
             Ok(a) => Ok(a.map(ParseEither::A)),
-            Err(err @ Parsed { value: Severity::Fatal(..), .. }) => Err(err),
-            Err(Parsed { value: Severity::Recoverable(..), .. }) => match B::try_parse(pos, tokens) {
+            Err(
+                err
+                @
+                Pos {
+                    value: Severity::Fatal(..),
+                    ..
+                },
+            ) => Err(err),
+            Err(Pos {
+                value: Severity::Recoverable(..),
+                ..
+            }) => match B::try_parse(pos, tokens) {
                 Ok(b) => Ok(b.map(ParseEither::B)),
                 Err(err) => Err(err),
             },
@@ -30,11 +44,15 @@ impl<A: Parse, B: Parse> Parse for ParseEither<A, B> {
     }
 }
 
-impl<A, B> From<ParseEither<A, B>> for AST where A: Into<AST>, B: Into<AST> {
+impl<A, B> From<ParseEither<A, B>> for AST
+where
+    A: Into<AST>,
+    B: Into<AST>,
+{
     fn from(either: ParseEither<A, B>) -> Self {
         match either {
             ParseEither::A(a) => a.into(),
-            ParseEither::B(b) => b.into()
+            ParseEither::B(b) => b.into(),
         }
     }
 }
@@ -63,4 +81,3 @@ macro_rules! impl_into_enum {
         }
     };
 }
-
