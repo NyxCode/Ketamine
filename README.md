@@ -1,58 +1,50 @@
-# Ketamine
-Embeddable simplistic dynamic scripting language
+# ketamine
+dynamic embeddable scripting language, written in rust.
 
-## Types
-- integer  
-  `integer = 1;`
-- float  
-  `float = 3.14;`
-- boolean  
-  `boolean = true;`
-- string  
-  `string = "hello world!";`
-- array  
-  `array = [1, 2, 3];`
-- object  
-  `object = { key: "value" };`
-- function  
-  ```
-  fib = function(n) {
-      if (n < 3) {
-          1
-      } else {
-          fib(n - 2) + fib(n - 1)
-      }
-  };
-  ```
+### types
+```
+integer = 1;
+float = 3.14;
+boolean = true;
+string = "hello world!";
+array = [1, 2, 3];
+object = { key: "value" };
+fib = function(n) {
+   if (n < 3) {
+       1
+   } else {
+       fib(n - 2) + fib(n - 1)
+   }
+};
+```
 
-## Control flow
-- If  
-  ```
-  age = if (person.age < 15) {
-      "child"
-  } else if (person.age < 18) {
-      "adolescent"
-  } else {
-      "adult
-  };
-  ```
-- for
-  ```
-  for (person in people) {
-      print("Hello", person.first_name);
-  };
-  ```
-- while
-  ```
-  result = while (true) {
-      next = try_again();
-      if (next != null) {
-          break next;
-      };
-  }
-  ```
 
-## Features
+### control flow
+```
+age = if (person.age < 15) {
+  "child"
+} else if (person.age < 18) {
+  "adolescent"
+} else {
+  "adult
+};
+```
+```
+for (person in people) {
+  print("Hello", person.first_name);
+};
+```
+
+```
+result = while (true) {
+  next = try_again();
+  if (next != null) {
+      break next;
+  };
+}
+```
+
+### features
 - embeddable & extendable  
   ```rust
   fn abs(this: i64, args: Vec<Value>) -> Result<Value, String> {
