@@ -1,5 +1,6 @@
 use crate::values::{ConcreteObject, Dictionary, Object, Value};
 use crate::Interpreter;
+
 use std::cell::RefCell;
 use std::convert::TryInto;
 use std::ops::Deref;
@@ -28,6 +29,21 @@ impl Object for Array {
             .collect::<Vec<String>>()
             .join(", ");
         format!("[{}]", elements)
+    }
+
+    fn equal(&self, other: &Value) -> bool {
+        if let Value::Array(arr) = other {
+            *arr.0.deref().borrow() == *self.0.deref().borrow()
+        } else {
+            false
+        }
+    }
+
+    fn plus(&self, other: &Value) -> Result<Value, ()> {
+        match other {
+            Value::String(string) => Ok(Value::String(format!("{}{}", self.to_string(), string))),
+            _ => Err(()),
+        }
     }
 
     fn get_index(&self, idx: &Value) -> Option<Value> {

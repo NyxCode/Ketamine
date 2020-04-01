@@ -1,7 +1,7 @@
 use crate::values::{Object, Value};
 use crate::{Eval, Evaluate, Interpreter};
 use lexer::Pos;
-use parser::ast::{BinaryOperation, UnaryOperation, UnaryOperator};
+use parser::ast::{BinaryOperation, BinaryOperator, UnaryOperation, UnaryOperator};
 
 impl Evaluate for Pos<BinaryOperation> {
     fn eval(self, interpreter: &mut Interpreter) -> Result<Eval, Pos<String>> {
@@ -20,7 +20,21 @@ impl Evaluate for Pos<BinaryOperation> {
             .eval(interpreter)?
             .try_into_value()
             .map_err(|err| Pos::new(start, end, err))?;
-        let result = lhs.binary_op(operator, &rhs).map_err(|_| {
+
+        let result = match &operator {
+            BinaryOperator::Add => lhs.plus(&rhs),
+            BinaryOperator::Sub => lhs.minus(&rhs),
+            BinaryOperator::Mul => lhs.multiply(&rhs),
+            BinaryOperator::Div => lhs.divide(&rhs),
+            BinaryOperator::Eq => Ok(Value::Boolean(lhs.equal(&rhs))),
+            BinaryOperator::NotEq => Ok(Value::Boolean(!lhs.equal(&rhs))),
+            BinaryOperator::GreaterThan => Ok(Value::Boolean(lhs.greater_than(&rhs))),
+            BinaryOperator::LessThan => Ok(Value::Boolean(lhs.less_than(&rhs))),
+            BinaryOperator::GreaterEqThan => Ok(Value::Boolean(!lhs.less_than(&rhs))),
+            BinaryOperator::LessEqThan => Ok(Value::Boolean(!lhs.greater_than(&rhs))),
+        };
+
+        let result = result.map_err(|_| {
             let (v1, v2) = operator.verb();
             let msg = format!(
                 "can't {} {} {} {}",
@@ -35,6 +49,7 @@ impl Evaluate for Pos<BinaryOperation> {
                 value: msg,
             }
         })?;
+
         Ok(Eval::Value(result))
     }
 }

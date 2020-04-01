@@ -1,6 +1,6 @@
 use crate::values::{ConcreteObject, Dictionary, Object, Value};
 use crate::Interpreter;
-use parser::ast::BinaryOperator;
+
 use std::f64::EPSILON;
 
 impl Object for i64 {
@@ -16,59 +16,60 @@ impl Object for i64 {
         ToString::to_string(self)
     }
 
-    fn binary_op(&self, op: BinaryOperator, rhs: &Value) -> Result<Value, ()> {
-        match op {
-            BinaryOperator::Add => match rhs {
-                Value::Integer(rhs) => Ok(Value::Integer(*self + *rhs)),
-                Value::Float(rhs) => Ok(Value::Float(*self as f64 + *rhs)),
-                Value::String(string) => Ok(Value::String(format!("{}{}", self, string))),
-                _ => Err(()),
-            },
-            BinaryOperator::Sub => match rhs {
-                Value::Integer(rhs) => Ok(Value::Integer(*self - *rhs)),
-                Value::Float(rhs) => Ok(Value::Float(*self as f64 - *rhs)),
-                _ => Err(()),
-            },
-            BinaryOperator::Mul => match rhs {
-                Value::Integer(rhs) => Ok(Value::Integer(*self * *rhs)),
-                Value::Float(rhs) => Ok(Value::Float(*self as f64 * *rhs)),
-                _ => Err(()),
-            },
-            BinaryOperator::Div => match rhs {
-                Value::Integer(rhs) => Ok(Value::Integer(*self / *rhs)),
-                Value::Float(rhs) => Ok(Value::Float(*self as f64 / *rhs)),
-                _ => Err(()),
-            },
-            BinaryOperator::Eq => match rhs {
-                Value::Integer(rhs) => Ok(Value::Boolean(*self == *rhs)),
-                Value::Float(rhs) => Ok(Value::Boolean((*self as f64 - *rhs).abs() < EPSILON)),
-                _ => Ok(Value::Boolean(false)),
-            },
-            BinaryOperator::NotEq => match rhs {
-                Value::Integer(rhs) => Ok(Value::Boolean(*self != *rhs)),
-                Value::Float(rhs) => Ok(Value::Boolean((*self as f64 - *rhs).abs() > EPSILON)),
-                _ => Ok(Value::Boolean(false)),
-            },
-            BinaryOperator::GreaterThan => match rhs {
-                Value::Integer(rhs) => Ok(Value::Boolean(*self > *rhs)),
-                Value::Float(rhs) => Ok(Value::Boolean(*self as f64 > *rhs)),
-                _ => Err(()),
-            },
-            BinaryOperator::LessThan => match rhs {
-                Value::Integer(rhs) => Ok(Value::Boolean(*self < *rhs)),
-                Value::Float(rhs) => Ok(Value::Boolean((*self as f64) < *rhs)),
-                _ => Err(()),
-            },
-            BinaryOperator::GreaterEqThan => match rhs {
-                Value::Integer(rhs) => Ok(Value::Boolean(*self >= *rhs)),
-                Value::Float(rhs) => Ok(Value::Boolean(*self as f64 >= *rhs)),
-                _ => Err(()),
-            },
-            BinaryOperator::LessEqThan => match rhs {
-                Value::Integer(rhs) => Ok(Value::Boolean(*self <= *rhs)),
-                Value::Float(rhs) => Ok(Value::Boolean(*self as f64 <= *rhs)),
-                _ => Err(()),
-            },
+    fn equal(&self, other: &Value) -> bool {
+        match other {
+            Value::Integer(int) => self == int,
+            Value::Float(float) => (*self as f64 - *float).abs() < EPSILON,
+            _ => false,
+        }
+    }
+
+    fn greater_than(&self, other: &Value) -> bool {
+        match other {
+            Value::Integer(int) => self > int,
+            Value::Float(float) => (*self as f64) > *float,
+            _ => false,
+        }
+    }
+
+    fn less_than(&self, other: &Value) -> bool {
+        match other {
+            Value::Integer(int) => self < int,
+            Value::Float(float) => (*self as f64) < *float,
+            _ => false,
+        }
+    }
+
+    fn plus(&self, other: &Value) -> Result<Value, ()> {
+        match other {
+            Value::Integer(int) => Ok(Value::Integer(*self + *int)),
+            Value::Float(float) => Ok(Value::Float(*self as f64 + *float)),
+            Value::String(string) => Ok(Value::String(format!("{}{}", self, string))),
+            _ => Err(()),
+        }
+    }
+
+    fn minus(&self, other: &Value) -> Result<Value, ()> {
+        match other {
+            Value::Integer(int) => Ok(Value::Integer(*self - *int)),
+            Value::Float(float) => Ok(Value::Float(*self as f64 - *float)),
+            _ => Err(()),
+        }
+    }
+
+    fn multiply(&self, other: &Value) -> Result<Value, ()> {
+        match other {
+            Value::Integer(int) => Ok(Value::Integer(*self * *int)),
+            Value::Float(float) => Ok(Value::Float(*self as f64 * *float)),
+            _ => Err(()),
+        }
+    }
+
+    fn divide(&self, other: &Value) -> Result<Value, ()> {
+        match other {
+            Value::Integer(int) => Ok(Value::Float(*self as f64 / *int as f64)),
+            Value::Float(float) => Ok(Value::Float(*self as f64 / *float)),
+            _ => Err(()),
         }
     }
 }

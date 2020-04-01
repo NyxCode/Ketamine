@@ -1,5 +1,5 @@
 use crate::values::{Object, Value};
-use parser::ast::BinaryOperator;
+
 
 impl Object for String {
     fn type_name(&self) -> &'static str {
@@ -14,11 +14,16 @@ impl Object for String {
         self.clone()
     }
 
-    fn binary_op(&self, op: BinaryOperator, rhs: &Value) -> Result<Value, ()> {
-        match op {
-            BinaryOperator::Add => Ok(Value::String(format!("{}{}", self, rhs.to_string()))),
-            _ => Err(()),
+    fn equal(&self, other: &Value) -> bool {
+        if let Value::String(string) = other {
+            string == self
+        } else {
+            false
         }
+    }
+
+    fn plus(&self, other: &Value) -> Result<Value, ()> {
+        Ok(Value::String(format!("{}{}", self, other.to_string())))
     }
 
     fn iterator(&self) -> Result<Box<dyn Iterator<Item = Value>>, String> {

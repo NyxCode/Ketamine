@@ -1,5 +1,6 @@
 use crate::values::{ConcreteObject, Dictionary, Object, Value};
 use crate::Interpreter;
+use std::f64::EPSILON;
 
 impl Object for f64 {
     fn type_name(&self) -> &'static str {
@@ -12,6 +13,63 @@ impl Object for f64 {
 
     fn to_string(&self) -> String {
         ToString::to_string(self)
+    }
+
+    fn equal(&self, other: &Value) -> bool {
+        match other {
+            Value::Integer(int) => (*self - *int as f64).abs() < EPSILON,
+            Value::Float(float) => (*self - *float).abs() < EPSILON,
+            _ => false,
+        }
+    }
+
+    fn greater_than(&self, other: &Value) -> bool {
+        match other {
+            Value::Integer(int) => *self > *int as f64,
+            Value::Float(float) => self > float,
+            _ => false,
+        }
+    }
+
+    fn less_than(&self, other: &Value) -> bool {
+        match other {
+            Value::Integer(int) => *self < *int as f64,
+            Value::Float(float) => self < float,
+            _ => false,
+        }
+    }
+
+    fn plus(&self, other: &Value) -> Result<Value, ()> {
+        match other {
+            Value::Integer(int) => Ok(Value::Float(*self + *int as f64)),
+            Value::Float(float) => Ok(Value::Float(*self + *float)),
+            Value::String(string) => Ok(Value::String(format!("{}{}", self, string))),
+            _ => Err(()),
+        }
+    }
+
+    fn minus(&self, other: &Value) -> Result<Value, ()> {
+        match other {
+            Value::Integer(int) => Ok(Value::Float(*self - *int as f64)),
+            Value::Float(float) => Ok(Value::Float(*self - *float)),
+            _ => Err(()),
+        }
+    }
+
+    fn multiply(&self, other: &Value) -> Result<Value, ()> {
+        match other {
+            Value::Integer(int) => Ok(Value::Float(*self * *int as f64)),
+            Value::Float(float) => Ok(Value::Float(*self * *float)),
+            _ => Err(()),
+        }
+    }
+
+    fn divide(&self, other: &Value) -> Result<Value, ()> {
+        match other {
+            Value::Integer(int) => Ok(Value::Float(*self / *int as f64)),
+            Value::Float(float) => Ok(Value::Float(*self / *float)),
+            _ => Err(()),
+        }
     }
 }
 

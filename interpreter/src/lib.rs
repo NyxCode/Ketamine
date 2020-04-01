@@ -18,7 +18,7 @@ use std::rc::Rc;
 mod tests {
     use crate::library::Library;
     use crate::values::Object;
-    use crate::values::{NativeFunction, Value};
+    
     use crate::Interpreter;
     use std::time::Instant;
 

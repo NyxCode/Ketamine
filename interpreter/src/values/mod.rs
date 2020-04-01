@@ -17,7 +17,7 @@ pub use null::*;
 pub use string::*;
 
 use crate::Interpreter;
-use parser::ast::{BinaryOperator, Ident};
+use parser::ast::{Ident};
 use parser::Pos;
 
 #[derive(Debug, Clone)]
@@ -72,9 +72,29 @@ pub trait Object {
     fn into_value(self) -> Value;
     fn to_string(&self) -> String;
 
-    fn binary_op(&self, _op: BinaryOperator, _rhs: &Value) -> Result<Value, ()> {
+    fn equal(&self, _other: &Value) -> bool {
+        false
+    }
+    fn greater_than(&self, _other: &Value) -> bool {
+        false
+    }
+    fn less_than(&self, _other: &Value) -> bool {
+        false
+    }
+
+    fn plus(&self, _other: &Value) -> Result<Value, ()> {
         Err(())
     }
+    fn minus(&self, _other: &Value) -> Result<Value, ()> {
+        Err(())
+    }
+    fn multiply(&self, _other: &Value) -> Result<Value, ()> {
+        Err(())
+    }
+    fn divide(&self, _other: &Value) -> Result<Value, ()> {
+        Err(())
+    }
+
     fn call(
         &self,
         start: usize,
@@ -106,7 +126,6 @@ pub trait Object {
         Err(format!("can't iterate over {}", self.type_name()))
     }
 }
-
 impl Object for Value {
     fn type_name(&self) -> &'static str {
         self.as_dyn().type_name()
@@ -120,8 +139,31 @@ impl Object for Value {
         self.as_dyn().to_string()
     }
 
-    fn binary_op(&self, op: BinaryOperator, rhs: &Value) -> Result<Value, ()> {
-        self.as_dyn().binary_op(op, rhs)
+    fn equal(&self, other: &Value) -> bool {
+        self.as_dyn().equal(other)
+    }
+
+    fn greater_than(&self, other: &Value) -> bool {
+        self.as_dyn().greater_than(other)
+    }
+
+    fn less_than(&self, other: &Value) -> bool {
+        self.as_dyn().less_than(other)
+    }
+
+    fn plus(&self, other: &Value) -> Result<Value, ()> {
+        self.as_dyn().plus(other)
+    }
+
+    fn minus(&self, other: &Value) -> Result<Value, ()> {
+        self.as_dyn().minus(other)
+    }
+
+    fn multiply(&self, other: &Value) -> Result<Value, ()> {
+        self.as_dyn().multiply(other)
+    }
+    fn divide(&self, other: &Value) -> Result<Value, ()> {
+        self.as_dyn().divide(other)
     }
 
     fn call(
@@ -153,5 +195,11 @@ impl Object for Value {
 
     fn iterator(&self) -> Result<Box<dyn Iterator<Item = Value>>, String> {
         self.as_dyn().iterator()
+    }
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        self.equal(other)
     }
 }

@@ -32,6 +32,22 @@ impl Object for Function {
         format!("function({}) {{..}}", args)
     }
 
+    fn equal(&self, other: &Value) -> bool {
+        if let Value::Function(other) = other {
+            let this = &*self.function as *const parser::ast::Function;
+            let other = &*other.function as *const parser::ast::Function;
+            this == other
+        } else {
+            false
+        }
+    }
+    fn plus(&self, other: &Value) -> Result<Value, ()> {
+        match other {
+            Value::String(string) => Ok(Value::String(format!("{}{}", self.to_string(), string))),
+            _ => Err(()),
+        }
+    }
+
     fn call(
         &self,
         _start: usize,

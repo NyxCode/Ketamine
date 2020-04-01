@@ -31,6 +31,19 @@ impl Object for Dictionary {
         format!("{{{}}}", pairs)
     }
 
+    fn equal(&self, other: &Value) -> bool {
+        if let Value::Dictionary(other) = other {
+            *self.0.deref().borrow() == *other.0.deref().borrow()
+        } else {
+            false
+        }
+    }
+    fn plus(&self, other: &Value) -> Result<Value, ()> {
+        match other {
+            Value::String(string) => Ok(Value::String(format!("{}{}", self.to_string(), string))),
+            _ => Err(()),
+        }
+    }
     fn get_field(&self, field: &str) -> Option<Value> {
         Some(
             self.0
