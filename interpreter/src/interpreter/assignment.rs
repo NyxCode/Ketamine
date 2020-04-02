@@ -11,7 +11,10 @@ impl Evaluate for Pos<Assignment> {
             value: Assignment { receiver, value },
         } = self;
 
-        let value = value.eval(interpreter)?.into_value();
+        let value = match value.eval(interpreter)? {
+            Eval::Value(value) => value,
+            instruction => return Ok(instruction)
+        };
 
         match *receiver.value {
             AST::Ident(ident) => {
