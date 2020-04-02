@@ -1,6 +1,6 @@
 use crate::library::Library;
 use crate::values::{Array, Value};
-use crate::Interpreter;
+use crate::{Interpreter, Object};
 
 use std::ops::Deref;
 
@@ -10,7 +10,23 @@ impl Library for StandardLibrary {
     fn register(&self, interpreter: &mut Interpreter) {
         interpreter.prototype_function("length", array_length);
         interpreter.prototype_function("contains", array_contains);
+
+        interpreter.prototype_function("length", string_length);
+        interpreter.prototype_function("contains", string_contains);
     }
+}
+
+fn string_contains(this: String, args: Vec<Value>) -> Result<Value, String> {
+    let arg = match args.get(0) {
+        None => return Err("missing argument".to_owned()),
+        Some(arg) => arg.to_string()
+    };
+    let contains = this.contains(&arg);
+    Ok(Value::Boolean(contains))
+}
+
+fn string_length(this: String, _: Vec<Value>) -> Result<Value, String> {
+    Ok(Value::Integer(this.len() as i64))
 }
 
 fn array_length(this: Array, _: Vec<Value>) -> Result<Value, String> {
