@@ -39,6 +39,7 @@ use crate::token_ext::TokenExt;
 
 use std::convert::TryFrom;
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub enum AST {
     Ident(Ident),

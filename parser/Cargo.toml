@@ -10,7 +10,12 @@ edition = "2018"
 lexer = { path = "../lexer" }
 report = { path = "../report" }
 log = "0.4"
-ptree = "0.2.1"
+ptree = { version = "0.2.1", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
 env_logger = "0.7.1"
+
+[features]
+tree-view = ["ptree"]
+serialize = ["serde", "lexer/serialize"]

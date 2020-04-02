@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 
 pub type ParseResult<'a, T> = Result<Pos<T>, Pos<Severity<'a>>>;
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug)]
 pub enum Severity<'a> {
     Fatal(Error<'a>),
@@ -41,6 +42,7 @@ impl<'a, T> ResultExt for Result<T, Pos<Severity<'a>>> {
     }
 }
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug)]
 pub enum Error<'a> {
     Missing(&'a str),

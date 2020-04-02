@@ -5,10 +5,12 @@ use crate::token_ext::TokenExt;
 use crate::{parse_list, Parse, Pos, Token};
 use lexer::TokenValue;
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub struct List(pub Vec<Pos<AST>>);
 impl_into_enum!(List => AST:List);
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub struct Object(pub Vec<(Pos<Ident>, Pos<AST>)>);
 impl_into_enum!(Object => AST:Object);

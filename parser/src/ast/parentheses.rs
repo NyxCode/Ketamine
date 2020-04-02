@@ -5,6 +5,7 @@ use crate::token_ext::TokenExt;
 use crate::{find_closing_delimiter, Parse, Pos, Token};
 use lexer::TokenValue;
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub struct Parentheses(pub Pos<Box<AST>>);
 

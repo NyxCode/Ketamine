@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0" name="viewport">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.4/dist/semantic.min.css" rel="stylesheet" type="text/css">
+    <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.4/dist/semantic.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+
+    <title>Ketamine Playground</title>
+    <style type="text/css">
+        h2 {
+            margin: 2em 0em;
+        }
+
+        .mono-font {
+            font-family: 'Roboto Mono', monospace;
+            font-size: larger;
+            white-space: pre;
+        }
+
+        .ui.container {
+            padding-top: 5em;
+            padding-bottom: 5em;
+        }
+
+        #code {
+            line-height: 1.4;
+        }
+
+        #code::selection {
+            background: rgba(255, 164, 103, 1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="ui container">
+    <h2 class="ui header">
+        Ketamine Playground
+        <a href="https://github.com/NyxCode/Ketamine" style="float: right;">
+            <i class="aligned right floated github alternate icon"></i>
+        </a>
+    </h2>
+    <div class="ui one column grid">
+        <div class="column">
+            <div class="top attached ui clearing segment">
+                <button class="ui right labeled icon button positive" id="run">
+                    <i class="right play icon"></i>
+                    Run
+                </button>
+                <button class="ui button" id="parse">Parse</button>
+                <button class="ui button" id="lex">Tokenize</button>
+
+            </div>
+
+            <textarea class="bottom attached fluid ui segment input fluid mono-font"
+                      id="code"
+                      spellcheck="false"
+                      style="resize: vertical; height: 45vh;">
+fib = function(n) {
+    if (n < 3) {
+        1
+    } else {
+        fib(n - 2) + fib(n - 1)
+    }
+};
+
+fib(10)
+</textarea>
+        </div>
+
+        <div class="column">
+            <div class="ui top attached tabular menu" id="tabs">
+                <a class="item active" id="output-tab">
+                    Output
+                </a>
+                <a class="item" id="ast-tab">
+                    AST
+                </a>
+                <a class="item" id="tokens-tab">
+                    Tokens
+                </a>
+            </div>
+            <div class="ui bottom attached segment" id="view">
+
+            </div>
+        </div>
+    </div>
+</div>
+<script src="./bootstrap.js"></script>
+<noscript>This page contains webassembly and javascript content, please enable javascript in your browser.
+</noscript>
+</body>
+</html>

@@ -5,6 +5,7 @@ pub mod ast;
 pub mod error;
 pub mod macros;
 pub mod token_ext;
+#[cfg(feature = "tree-view")]
 pub mod tree;
 
 use crate::ast::AST;

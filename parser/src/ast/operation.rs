@@ -5,6 +5,7 @@ use crate::{impl_into_enum, Parse, Token};
 use lexer::{Pos, TokenValue};
 use std::convert::TryFrom;
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone, Copy)]
 pub enum BinaryOperator {
     Add,
@@ -60,6 +61,7 @@ impl TryFrom<&TokenValue> for BinaryOperator {
     }
 }
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub struct BinaryOperation {
     pub lhs: Pos<Box<AST>>,
@@ -104,12 +106,14 @@ impl BinaryOperation {
     }
 }
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum UnaryOperator {
     Negate,
     Minus,
 }
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub struct UnaryOperation {
     pub op: Pos<UnaryOperator>,

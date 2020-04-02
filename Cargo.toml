@@ -3,5 +3,6 @@ members = [
     "lexer",
     "parser",
     "report",
-    "interpreter"
+    "interpreter",
+    "playground"
 ]

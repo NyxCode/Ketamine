@@ -6,12 +6,14 @@ pub struct Console;
 
 impl Library for Console {
     fn register(&self, interpreter: &mut Interpreter) {
-        let print = Value::NativeFunction(NativeFunction::new(print));
-        interpreter.scope.push_var("print", print, false);
+        let print_line = Value::NativeFunction(NativeFunction::new(print_line));
+        interpreter.scope.push_var("print", print_line, false);
+        let read_line = Value::NativeFunction(NativeFunction::new(read_line));
+        interpreter.scope.push_var("read_line", read_line, false);
     }
 }
 
-fn print(_: Value, args: Vec<Value>) -> Result<Value, String> {
+fn print_line(_: Value, args: Vec<Value>) -> Result<Value, String> {
     let content = args
         .into_iter()
         .map(|v| v.to_string())
@@ -19,4 +21,10 @@ fn print(_: Value, args: Vec<Value>) -> Result<Value, String> {
         .join(" ");
     println!("{}", content);
     Ok(Value::Null)
+}
+
+fn read_line(_: Value, _: Vec<Value>) -> Result<Value, String> {
+    let mut line = String::new();
+    std::io::stdin().read_line(&mut line).map_err(|err| err.to_string())?;
+    Ok(Value::String(line))
 }

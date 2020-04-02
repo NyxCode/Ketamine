@@ -4,6 +4,7 @@ use crate::token_ext::TokenExt;
 use crate::{find_closing_delimiter, impl_into_enum, Parse, Pos, Token};
 use lexer::TokenValue;
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub struct If {
     pub if_branch: Pos<IfBranch>,
@@ -12,6 +13,7 @@ pub struct If {
 }
 impl_into_enum!(If => AST:If);
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub struct IfBranch {
     pub condition: Pos<Box<AST>>,

@@ -10,3 +10,7 @@ edition = "2018"
 lexer = { path = "../lexer" }
 parser = { path = "../parser" }
 report = { path = "../report" }
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+serialize = ["serde"]

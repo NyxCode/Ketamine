@@ -20,6 +20,7 @@ use crate::Interpreter;
 use parser::ast::{Ident};
 use parser::Pos;
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub enum Value {
     String(String),

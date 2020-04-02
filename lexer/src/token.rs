@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 pub struct Pos<T> {
     pub start: usize,
     pub end: usize,
@@ -59,6 +60,7 @@ impl<T> Pos<T> {
     }
 }
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenValue {
     Integer(i64),

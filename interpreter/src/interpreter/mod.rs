@@ -13,7 +13,7 @@ mod literals;
 mod loops;
 
 pub struct Interpreter {
-    pub(crate) scope: ScopeStack,
+    pub scope: ScopeStack,
     pub(crate) integer_proto: Dictionary,
     pub(crate) float_proto: Dictionary,
     pub(crate) boolean_proto: Dictionary,

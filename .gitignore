@@ -1,2 +1,5 @@
 /target
 /.idea
+/playground/pkg/
+/playground/www/node_modules/
+/playground/www/dist/

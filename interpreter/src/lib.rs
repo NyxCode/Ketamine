@@ -1,17 +1,20 @@
 #![deny(unused_mut, unreachable_patterns)]
 
-use crate::values::{Object, Value};
 use lexer::Pos;
 use parser::ast::{Call, FieldAccess, Ident, Index, Parentheses, Statement, AST};
 
 use std::fmt::Debug;
 
 mod interpreter;
-mod library;
+pub mod library;
 mod scope;
 mod values;
+#[cfg(feature = "serialize")]
+mod serialization;
 
 pub use crate::interpreter::*;
+pub use crate::values::*;
+pub use crate::scope::*;
 use std::rc::Rc;
 
 #[cfg(test)]
@@ -21,6 +24,7 @@ mod tests {
     
     use crate::Interpreter;
     use std::time::Instant;
+    use std::io::stdout;
 
     #[test]
     fn test() {
@@ -54,7 +58,7 @@ mod tests {
         let start = Instant::now();
         match interpreter.eval(src) {
             Ok(result) => println!("==> {}", result.to_string()),
-            Err(err) => report::report(src, err.start, err.end, err.value),
+            Err(err) => report::report_io(&mut stdout(), src, err.start, err.end, err.value).unwrap(),
         }
         println!(
             "{: >5}s execution time",

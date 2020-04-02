@@ -6,6 +6,7 @@ use crate::{Parse, Pos, Token};
 use lexer::TokenValue;
 use std::ops::Deref;
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Ident(pub String);
 impl_into_enum!(Ident => AST:Ident);

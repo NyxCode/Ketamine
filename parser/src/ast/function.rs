@@ -5,6 +5,7 @@ use crate::token_ext::TokenExt;
 use crate::{parse_list, Parse, Pos, Token};
 use lexer::TokenValue;
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub struct Function {
     pub params: Vec<Pos<Ident>>,

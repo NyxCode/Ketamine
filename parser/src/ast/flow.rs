@@ -5,14 +5,17 @@ use crate::token_ext::TokenExt;
 use crate::{Parse, Pos, Token};
 use lexer::TokenValue;
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub struct Return(pub Option<Pos<Box<AST>>>);
 impl_into_enum!(Return => AST:Return);
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub struct Break(pub Option<Pos<Box<AST>>>);
 impl_into_enum!(Break => AST:Break);
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub struct Continue;
 impl_into_enum!(Continue => AST:Continue);

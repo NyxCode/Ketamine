@@ -4,6 +4,7 @@ use crate::token_ext::TokenExt;
 use crate::{Parse, Pos, Token};
 use lexer::TokenValue;
 
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[derive(Debug, Clone)]
 pub enum Statement {
     Unterminated(Box<AST>),
