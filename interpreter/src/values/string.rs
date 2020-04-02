@@ -1,5 +1,7 @@
 use crate::values::{Object, Value};
 use crate::{ConcreteObject, Dictionary, Interpreter};
+use std::convert::TryInto;
+use std::ops::Deref;
 
 
 impl Object for String {
@@ -25,6 +27,36 @@ impl Object for String {
 
     fn plus(&self, other: &Value) -> Result<Value, ()> {
         Ok(Value::String(format!("{}{}", self, other.to_string())))
+    }
+
+    fn get_index(&self, idx: &Value) -> Option<Value> {
+        match idx {
+            Value::Integer(int) => {
+                let index: usize = match (*int).try_into() {
+                    Ok(index) => index,
+                    Err(..) => return Some(Value::Null)
+                };
+                let value = self.chars().nth(index)
+                    .map(|c| Value::String(c.to_string()))
+                    .unwrap_or(Value::Null);
+                Some(value)
+            }
+            Value::Array(array) => {
+                let array = array.0.deref().borrow();
+                let mut out = String::with_capacity(array.len());
+                for element in array.iter() {
+                    if let Value::Integer(idx) = element {
+                        if let Ok(idx) = (*idx).try_into() {
+                            if let Some(c) = self.chars().nth(idx) {
+                                out.push(c)
+                            }
+                        }
+                    }
+                }
+                Some(Value::String(out))
+            }
+            _ => None
+        }
     }
 
     fn iterator(&self) -> Result<Box<dyn Iterator<Item = Value>>, String> {
