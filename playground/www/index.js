@@ -2,8 +2,6 @@ import * as wasm from "playground";
 import "jquery.json-viewer/json-viewer/jquery.json-viewer";
 import "jquery.json-viewer/json-viewer/jquery.json-viewer.css";
 
-wasm.set_panic_hook();
-
 $(document).delegate('#code', 'keydown', function (e) {
     var keyCode = e.keyCode || e.which;
 

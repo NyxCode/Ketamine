@@ -8,28 +8,12 @@ use wasm_bindgen::prelude::*;
 use interpreter::{Interpreter, NativeFunction, Object, Value};
 use interpreter::library::Library;
 use lexer::{LexingError, Pos, TokenValue};
-use parser::{Parse, Token};
+use parser::Parse;
 use parser::ast::Statement;
 use parser::error::Severity;
 
-mod utils;
-
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
-#[cfg(feature = "wee_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
-#[wasm_bindgen]
-extern {
-    fn alert(s: &str);
-}
-
-#[cfg(feature = "console_error_panic_hook")]
-#[wasm_bindgen]
-pub fn set_panic_hook() {
-    utils::set_panic_hook();
-}
 
 #[wasm_bindgen]
 pub fn run(src: &str) -> Result<JsValue, JsValue> {
@@ -113,7 +97,7 @@ impl Default for BrowserLib {
 impl Library for BrowserLib {
     fn register(&self, inter: &mut Interpreter) {
         let out = self.out.clone();
-        let print = NativeFunction::new(move |this, args| {
+        let print = NativeFunction::new(move |_, args| {
             let msg = args.into_iter().map(|arg| arg.to_string()).collect::<Vec<_>>().join(" ");
             let mut out = out.deref().borrow_mut();
             out.push_str(&msg);

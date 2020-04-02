@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "webpack --config webpack.config.js",
+    "build-production": "webpack --config webpack.config.prod.js",
     "start": "webpack-dev-server"
   },
   "repository": {
