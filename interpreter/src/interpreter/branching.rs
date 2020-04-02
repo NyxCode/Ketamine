@@ -1,19 +1,19 @@
-use crate::values::{Object, Value};
-use crate::{Eval, Evaluate, Interpreter};
 use lexer::Pos;
 use parser::ast::{If, IfBranch};
+
+use crate::{Eval, Evaluate, Interpreter};
+use crate::values::{Object, Value};
 
 impl Evaluate for Pos<If> {
     fn eval(self, interpreter: &mut Interpreter) -> Result<Eval, Pos<String>> {
         let Pos {
-            start,
-            end,
             value:
-                If {
-                    if_branch,
-                    else_if_branches,
-                    else_branch,
-                },
+            If {
+                if_branch,
+                else_if_branches,
+                else_branch,
+            },
+            ..
         } = self;
 
         if let Some(res) = evaluate_if(if_branch, interpreter)? {
@@ -24,15 +24,11 @@ impl Evaluate for Pos<If> {
                 return Ok(res);
             }
         }
-        let else_branch = if let Some(else_branch) = else_branch {
-            else_branch
-                .eval(interpreter)?
-                .try_into_value()
-                .map_err(|err| Pos::new(start, end, err))?
+        if let Some(else_branch) = else_branch {
+            else_branch.eval(interpreter)
         } else {
-            Value::Null
-        };
-        Ok(Eval::Value(else_branch))
+            Ok(Eval::Value(Value::Null))
+        }
     }
 }
 
