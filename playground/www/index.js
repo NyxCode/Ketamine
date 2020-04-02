@@ -123,6 +123,7 @@ function displayJson(json) {
 }
 
 function displayError(error) {
+    console.log(error);
     $("#code").selectRange(error.start, error.end);
     let lines = error.report.split(/\r\n|\r|\n/);
     let out = lines

@@ -16,7 +16,7 @@ parser = { path = "../parser", features = ["serialize"] }
 lexer = { path = "../lexer", features = ["serialize"] }
 serde = { version = "1", features = ["derive"] }
 report = { path = "../report" }
-
+console_error_panic_hook = "0.1.1"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.2"

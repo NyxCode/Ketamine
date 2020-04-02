@@ -17,6 +17,7 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
 pub fn run(src: &str) -> Result<JsValue, JsValue> {
+    console_error_panic_hook::set_once();
     let result = run_interpreter(&src).map(|(val, stdout)| (val.to_string(), stdout))?;
     Ok(JsValue::from_serde(&result).unwrap())
 }
