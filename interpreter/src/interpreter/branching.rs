@@ -1,18 +1,18 @@
 use lexer::Pos;
 use parser::ast::{If, IfBranch};
 
-use crate::{Eval, Evaluate, Interpreter};
 use crate::values::{Object, Value};
+use crate::{Eval, Evaluate, Interpreter};
 
 impl Evaluate for Pos<If> {
     fn eval(self, interpreter: &mut Interpreter) -> Result<Eval, Pos<String>> {
         let Pos {
             value:
-            If {
-                if_branch,
-                else_if_branches,
-                else_branch,
-            },
+                If {
+                    if_branch,
+                    else_if_branches,
+                    else_branch,
+                },
             ..
         } = self;
 

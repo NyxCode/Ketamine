@@ -13,7 +13,7 @@ impl Evaluate for Pos<Assignment> {
 
         let value = match value.eval(interpreter)? {
             Eval::Value(value) => value,
-            instruction => return Ok(instruction)
+            instruction => return Ok(instruction),
         };
 
         match *receiver.value {

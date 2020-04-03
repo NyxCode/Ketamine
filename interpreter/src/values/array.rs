@@ -1,17 +1,17 @@
-use crate::values::{ConcreteObject, Dictionary, Object, Value};
-use crate::Interpreter;
-
 use std::cell::RefCell;
 use std::convert::TryInto;
 use std::ops::Deref;
 use std::rc::Rc;
+
+use crate::values::{Dictionary, HasPrototype, Object, Value};
+use crate::{HasTypeName, Interpreter, ObjectConversion};
 
 #[derive(Debug, Clone)]
 pub struct Array(pub Rc<RefCell<Vec<Value>>>);
 
 impl Object for Array {
     fn type_name(&self) -> &'static str {
-        <Self as ConcreteObject>::type_name()
+        <Self as HasTypeName>::type_name()
     }
 
     fn into_value(self) -> Value {
@@ -47,22 +47,26 @@ impl Object for Array {
     }
 
     fn get_index(&self, idx: &Value) -> Option<Value> {
-        let idx = match idx {
-            Value::Integer(idx) => *idx,
-            Value::Float(idx) if idx.fract() == 0.0 => *idx as i64,
-            _ => return None,
-        };
+        let this = self.0.deref().borrow();
+        match idx {
+            Value::Integer(idx) => match (*idx).try_into() {
+                Ok(index) => Some(this.get::<usize>(index).cloned().unwrap_or(Value::Null)),
+                Err(..) => Some(Value::Null),
+            },
+            Value::Array(array) => {
+                let array = array.0.deref().borrow();
 
-        match TryInto::<usize>::try_into(idx) {
-            Ok(idx) => Some(
-                self.0
-                    .deref()
-                    .borrow()
-                    .get(idx)
+                let sub_array = array
+                    .iter()
+                    .flat_map(|element| i64::get_as(element.clone()))
+                    .flat_map(|idx| TryInto::<usize>::try_into(idx).ok())
+                    .flat_map(|idx| this.get(idx))
                     .cloned()
-                    .unwrap_or(Value::Null),
-            ),
-            Err(..) => Some(Value::Null),
+                    .collect::<Vec<_>>();
+
+                Some(Value::Array(Array::new(sub_array)))
+            }
+            _ => None,
         }
     }
 
@@ -109,18 +113,19 @@ impl Array {
     }
 }
 
-impl ConcreteObject for Array {
+impl HasPrototype for Array {
+    fn get_prototype(interpreter: &Interpreter) -> &Dictionary {
+        &interpreter.array_proto
+    }
+}
+
+impl HasTypeName for Array {
     fn type_name() -> &'static str {
         "array"
     }
+}
 
-    fn convert_from(value: &Value) -> Option<Self> {
-        match value {
-            Value::Array(array) => Some(array.clone()),
-            _ => None,
-        }
-    }
-
+impl ObjectConversion for Array {
     fn get_as(value: Value) -> Option<Self> {
         match value {
             Value::Array(array) => Some(array),
@@ -128,7 +133,10 @@ impl ConcreteObject for Array {
         }
     }
 
-    fn get_prototype(interpreter: &Interpreter) -> &Dictionary {
-        &interpreter.array_proto
+    fn convert_from(value: &Value) -> Option<Self> {
+        match value {
+            Value::Array(array) => Some(array.clone()),
+            _ => None,
+        }
     }
 }

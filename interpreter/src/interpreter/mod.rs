@@ -1,7 +1,7 @@
 use crate::scope::ScopeStack;
 use crate::values::Object;
-use crate::values::{ConcreteObject, Dictionary, NativeFunction, Value};
-use crate::Evaluate;
+use crate::values::{Dictionary, HasPrototype, NativeFunction, Value};
+use crate::{Evaluate, HasTypeName, ObjectConversion};
 use parser::ast::Statement;
 use parser::{Parse, Pos};
 
@@ -74,20 +74,22 @@ impl Interpreter {
 
     pub fn prototype_function<O, I, F>(&mut self, ident: I, function: F)
     where
-        O: Object + ConcreteObject,
+        O: Object + HasPrototype + HasTypeName + ObjectConversion,
         I: Into<String>,
-        F: Fn(O, Vec<Value>) -> Result<Value, String> + 'static,
+        F: Fn(&mut Interpreter, O, Vec<Value>) -> Result<Value, String> + 'static,
     {
         let proto = O::get_prototype(self);
-        let function = NativeFunction::new(move |this: Value, args: Vec<Value>| {
-            function(O::try_get_as(this)?, args)
-        });
+        let function = NativeFunction::new(
+            move |inter: &mut Interpreter, this: Value, args: Vec<Value>| {
+                function(inter, O::try_get_as(this)?, args)
+            },
+        );
         proto.insert(ident.into(), Value::NativeFunction(function));
     }
 
     pub fn prototype_field<O, I>(&mut self, ident: I, value: Value)
     where
-        O: Object + ConcreteObject,
+        O: Object + HasPrototype + ObjectConversion,
         I: Into<String>,
     {
         let proto = O::get_prototype(self);

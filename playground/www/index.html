@@ -4,6 +4,7 @@
     <meta charset="utf-8"/>
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible"/>
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0" name="viewport">
+    <meta content="no-referrer" name="referrer"/>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.4/dist/semantic.min.css" rel="stylesheet" type="text/css">
     <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.4/dist/semantic.min.js"></script>
@@ -43,33 +44,35 @@
         <a href="https://github.com/NyxCode/Ketamine" style="float: right;">
             <i class="aligned right floated github alternate icon"></i>
         </a>
+        <a id="create-permalink" style="float: right; cursor: pointer;">
+            <i class="aligned right floated share alternate icon"></i>
+        </a>
+
+
     </h2>
     <div class="ui one column grid">
         <div class="column">
             <div class="top attached ui clearing segment">
-                <button class="ui right labeled icon button positive" id="run">
-                    <i class="right play icon"></i>
-                    Run
-                </button>
-                <button class="ui button" id="parse">Parse</button>
-                <button class="ui button" id="lex">Tokenize</button>
+                <div class="ui buttons">
+                    <button class="ui left labeled icon button floating dropdown">
+                        Examples
+                        <i class="chevron down icon"></i>
+                        <div class="menu">
+                            <div class="item" id="fibonacci">Fibonacci sequence</div>
+                        </div>
+                    </button>
+                    <button class="ui right labeled icon button positive" id="run">
+                        Execute
+                        <i class="play icon"></i>
+                    </button>
+                </div>
 
             </div>
 
             <textarea class="bottom attached fluid ui segment input fluid mono-font"
                       id="code"
                       spellcheck="false"
-                      style="resize: vertical; height: 45vh;">
-fib = function(n) {
-    if (n < 3) {
-        1
-    } else {
-        fib(n - 2) + fib(n - 1)
-    }
-};
-
-fib(10)
-</textarea>
+                      style="resize: vertical; height: 45vh;"></textarea>
         </div>
 
         <div class="column">
@@ -84,7 +87,7 @@ fib(10)
                     Tokens
                 </a>
             </div>
-            <div class="ui bottom attached segment" id="view">
+            <div class="ui bottom attached segment" id="view" style="overflow-x: auto;">
 
             </div>
         </div>

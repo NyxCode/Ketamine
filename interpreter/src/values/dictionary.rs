@@ -1,5 +1,5 @@
-use crate::values::{ConcreteObject, Object, Value};
-use crate::Interpreter;
+use crate::values::{HasPrototype, Object, Value};
+use crate::{HasTypeName, Interpreter, ObjectConversion};
 use parser::ast::Ident;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -103,18 +103,25 @@ impl Default for Dictionary {
     }
 }
 
-impl ConcreteObject for Dictionary {
+impl HasPrototype for Dictionary {
+    fn get_prototype(interpreter: &Interpreter) -> &Dictionary {
+        &interpreter.object_proto
+    }
+}
+
+impl HasTypeName for Dictionary {
     fn type_name() -> &'static str {
         "object"
     }
+}
 
-    fn convert_from(value: &Value) -> Option<Self> {
-        match value {
-            Value::Dictionary(dic) => Some(dic.clone()),
-            _ => None,
-        }
+impl Dictionary {
+    pub fn insert(&self, key: String, value: Value) -> Option<Value> {
+        self.0.deref().borrow_mut().insert(key, value)
     }
+}
 
+impl ObjectConversion for Dictionary {
     fn get_as(value: Value) -> Option<Self> {
         if let Value::Dictionary(dict) = value {
             Some(dict)
@@ -123,13 +130,10 @@ impl ConcreteObject for Dictionary {
         }
     }
 
-    fn get_prototype(interpreter: &Interpreter) -> &Dictionary {
-        &interpreter.object_proto
-    }
-}
-
-impl Dictionary {
-    pub fn insert(&self, key: String, value: Value) -> Option<Value> {
-        self.0.deref().borrow_mut().insert(key, value)
+    fn convert_from(value: &Value) -> Option<Self> {
+        match value {
+            Value::Dictionary(dic) => Some(dic.clone()),
+            _ => None,
+        }
     }
 }

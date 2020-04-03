@@ -17,7 +17,7 @@ pub use null::*;
 pub use string::*;
 
 use crate::Interpreter;
-use parser::ast::{Ident};
+use parser::ast::Ident;
 use parser::Pos;
 
 #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
@@ -50,22 +50,38 @@ impl Value {
     }
 }
 
-pub trait ConcreteObject: Sized {
+pub trait HasPrototype: Sized {
+    fn get_prototype(interpreter: &Interpreter) -> &Dictionary;
+}
+
+pub trait HasTypeName {
     fn type_name() -> &'static str;
+}
+
+pub trait ObjectConversion: Sized {
+    fn get_as(value: Value) -> Option<Self>;
+    fn try_get_as(value: Value) -> Result<Self, String>
+    where
+        Self: HasTypeName,
+    {
+        let from = value.type_name();
+        Self::get_as(value).ok_or_else(|| {
+            format!(
+                "mismatched type: expected {}, got {}",
+                Self::type_name(),
+                from
+            )
+        })
+    }
 
     fn convert_from(value: &Value) -> Option<Self>;
-    fn try_convert_from(value: &Value) -> Result<Self, String> {
+    fn try_convert_from(value: &Value) -> Result<Self, String>
+    where
+        Self: HasTypeName,
+    {
         Self::convert_from(value)
             .ok_or_else(|| format!("can't cast {} to {}", value.type_name(), Self::type_name()))
     }
-
-    fn get_as(value: Value) -> Option<Self>;
-    fn try_get_as(value: Value) -> Result<Self, String> {
-        Self::get_as(value)
-            .ok_or_else(|| format!("mismatched type: expected {}", Self::type_name()))
-    }
-
-    fn get_prototype(interpreter: &Interpreter) -> &Dictionary;
 }
 
 pub trait Object {
@@ -202,5 +218,21 @@ impl Object for Value {
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         self.equal(other)
+    }
+}
+
+impl HasTypeName for Value {
+    fn type_name() -> &'static str {
+        "generic"
+    }
+}
+
+impl ObjectConversion for Value {
+    fn get_as(value: Value) -> Option<Self> {
+        Some(value)
+    }
+
+    fn convert_from(value: &Value) -> Option<Self> {
+        Some(value.clone())
     }
 }

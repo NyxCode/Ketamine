@@ -13,7 +13,7 @@ impl Library for Console {
     }
 }
 
-fn print_line(_: Value, args: Vec<Value>) -> Result<Value, String> {
+fn print_line(_: &mut Interpreter, _: Value, args: Vec<Value>) -> Result<Value, String> {
     let content = args
         .into_iter()
         .map(|v| v.to_string())
@@ -23,8 +23,10 @@ fn print_line(_: Value, args: Vec<Value>) -> Result<Value, String> {
     Ok(Value::Null)
 }
 
-fn read_line(_: Value, _: Vec<Value>) -> Result<Value, String> {
+fn read_line(_: &mut Interpreter, _: Value, _: Vec<Value>) -> Result<Value, String> {
     let mut line = String::new();
-    std::io::stdin().read_line(&mut line).map_err(|err| err.to_string())?;
+    std::io::stdin()
+        .read_line(&mut line)
+        .map_err(|err| err.to_string())?;
     Ok(Value::String(line))
 }

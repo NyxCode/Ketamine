@@ -1,6 +1,5 @@
 use crate::values::{Object, Value};
 
-
 impl Object for () {
     fn type_name(&self) -> &'static str {
         "null"

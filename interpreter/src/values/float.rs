@@ -1,10 +1,10 @@
-use crate::values::{ConcreteObject, Dictionary, Object, Value};
-use crate::Interpreter;
+use crate::values::{Dictionary, HasPrototype, Object, Value};
+use crate::{HasTypeName, Interpreter, ObjectConversion};
 use std::f64::EPSILON;
 
 impl Object for f64 {
     fn type_name(&self) -> &'static str {
-        <Self as ConcreteObject>::type_name()
+        <Self as HasTypeName>::type_name()
     }
 
     fn into_value(self) -> Value {
@@ -73,19 +73,19 @@ impl Object for f64 {
     }
 }
 
-impl ConcreteObject for f64 {
+impl HasPrototype for f64 {
+    fn get_prototype(interpreter: &Interpreter) -> &Dictionary {
+        &interpreter.float_proto
+    }
+}
+
+impl HasTypeName for f64 {
     fn type_name() -> &'static str {
         "float"
     }
+}
 
-    fn convert_from(value: &Value) -> Option<Self> {
-        match value {
-            Value::Integer(int) => Some(*int as f64),
-            Value::Float(float) => Some(*float),
-            _ => None,
-        }
-    }
-
+impl ObjectConversion for f64 {
     fn get_as(value: Value) -> Option<Self> {
         if let Value::Float(float) = value {
             Some(float)
@@ -94,7 +94,11 @@ impl ConcreteObject for f64 {
         }
     }
 
-    fn get_prototype(interpreter: &Interpreter) -> &Dictionary {
-        &interpreter.float_proto
+    fn convert_from(value: &Value) -> Option<Self> {
+        match value {
+            Value::Integer(int) => Some(*int as f64),
+            Value::Float(float) => Some(*float),
+            _ => None,
+        }
     }
 }

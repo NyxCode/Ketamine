@@ -1,9 +1,10 @@
 import * as wasm from "playground";
 import "jquery.json-viewer/json-viewer/jquery.json-viewer";
 import "jquery.json-viewer/json-viewer/jquery.json-viewer.css";
+import LZString from "./lz-string.js"
 
 $(document).delegate('#code', 'keydown', function (e) {
-    var keyCode = e.keyCode || e.which;
+    let keyCode = e.keyCode || e.which;
 
     if (keyCode === 9) {
         e.preventDefault();
@@ -13,7 +14,7 @@ $(document).delegate('#code', 'keydown', function (e) {
         if (e.shiftKey) {
             let remove = $(this).val().substring(start - 4, start);
             if (remove === "    ") {
-                $(this).val($(this).val().substring(0, start - 4) + $(this).val().substring(start))
+                $(this).val($(this).val().substring(0, start - 4) + $(this).val().substring(start));
                 this.selectionStart = this.selectionEnd = start - 4;
             }
         } else {
@@ -30,15 +31,36 @@ $(document).delegate('#code', 'keydown', function (e) {
     }
 });
 
-$.fn.selectRange = function(start, end) {
-    var e = document.getElementById($(this).attr('id')); // I don't know why... but $(this) don't want to work today :-/
-    if (!e) return;
-    else if (e.setSelectionRange) { e.focus(); e.setSelectionRange(start, end); } /* WebKit */
-    else if (e.createTextRange) { var range = e.createTextRange(); range.collapse(true); range.moveEnd('character', end); range.moveStart('character', start); range.select(); } /* IE */
-    else if (e.selectionStart) { e.selectionStart = start; e.selectionEnd = end; }
+$.fn.selectRange = function (start, end) {
+    let e = document.getElementById($(this).attr('id'));
+    if (!e) {
+        // nothing
+    } else if (e.setSelectionRange) {
+        e.focus();
+        e.setSelectionRange(start, end);
+    } else if (e.createTextRange) {
+        let range = e.createTextRange();
+        range.collapse(true);
+        range.moveEnd('character', end);
+        range.moveStart('character', start);
+        range.select();
+    } else if (e.selectionStart) {
+        e.selectionStart = start;
+        e.selectionEnd = end;
+    }
 };
 
 $(document).ready(function () {
+    $('.ui.dropdown').dropdown({
+        action: function(a, b, element) {
+            let id = element.id;
+            if (id === "fibonacci") {
+                window.location.href = "?code=GYSwRgBAvBwK4DsDGAXEB7BAKBBKCA3gFASkQjAQ4QA8EAzPsWSxAIwlkC+EApgDYBnXoU6tY4agFoIAJnwBqCWGntcYiFyJcA3ESKgVbAAy4gA";
+            }
+        }
+    });
+
+
     $('#tabs').on("click", ".item", function () {
         if (this.id === "output-tab") {
             run();
@@ -54,11 +76,41 @@ $(document).ready(function () {
     });
 
     $("#run").on("click", run);
-    $("#lex").on("click", lex);
-    $("#parse").on("click", parse);
 
+    $("#create-permalink").on("click", function () {
+        let code = $("#code").val();
+        let compressed = LZString.compressToEncodedURIComponent(code);
+        let length = compressed.length + window.location.origin.length + 7;
+        if (length > 2047) {
+            alert("Too much code to create permalink!")
+        } else {
+            window.location.href = "?code=" + compressed;
+        }
+    });
+
+    initCode();
     run();
 });
+
+function initCode() {
+    let code;
+    let urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has("code")) {
+        let compressed = urlParams.get("code");
+        code = LZString.decompressFromEncodedURIComponent(compressed);
+    } else {
+        code = `fib = function(n) {
+    if (n < 3) {
+        1
+    } else {
+        fib(n - 2) + fib(n - 1)
+    }
+};
+
+fib(10)`
+    }
+    $("#code").val(code)
+}
 
 function run() {
     let code = $("#code").val();

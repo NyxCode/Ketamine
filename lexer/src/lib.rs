@@ -156,9 +156,16 @@ fn read_colon(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
 
 fn read_string(offset: usize, input: &str) -> Option<Pos<TokenValue>> {
     // TODO: unescape pasrsed string ("\n" should not be parsed as "\\n")
-    let regex = Lazy::new(|| Regex::new(r#"^"[^"\\]*(\\.[^"\\]*)*""#).unwrap());
+    let regex = Lazy::new(|| Regex::new(r#"^"(\\.|[^"\\])*""#).unwrap());
     let m = regex.deref().find(input)?;
-    let string = &input[(m.start() + 1)..(m.end() - 1)];
+
+    let string = &input[(m.start() + 1)..(m.end() - 1)]
+        .replace(r"\n", "\n")
+        .replace(r"\t", "\t")
+        .replace(r"\r", "\r")
+        .replace(r"\0", "\0")
+        .replace(r"\\", r"\")
+        .replace(r#"\""#, r#"""#);
     let value = TokenValue::String(string.to_owned());
 
     Some(Pos {

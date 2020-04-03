@@ -1,7 +1,7 @@
-use crate::values::{ConcreteObject, Dictionary, Object, Value};
-use crate::Interpreter;
-
 use std::f64::EPSILON;
+
+use crate::values::{Dictionary, HasPrototype, Object, Value};
+use crate::{HasTypeName, Interpreter, ObjectConversion};
 
 impl Object for i64 {
     fn type_name(&self) -> &'static str {
@@ -74,19 +74,19 @@ impl Object for i64 {
     }
 }
 
-impl ConcreteObject for i64 {
+impl HasPrototype for i64 {
+    fn get_prototype(interpreter: &Interpreter) -> &Dictionary {
+        &interpreter.integer_proto
+    }
+}
+
+impl HasTypeName for i64 {
     fn type_name() -> &'static str {
         "integer"
     }
+}
 
-    fn convert_from(value: &Value) -> Option<Self> {
-        match value {
-            Value::Integer(int) => Some(*int),
-            Value::Float(float) if float.fract() == 0.0 => Some(*float as i64),
-            _ => None,
-        }
-    }
-
+impl ObjectConversion for i64 {
     fn get_as(value: Value) -> Option<Self> {
         if let Value::Integer(int) = value {
             Some(int)
@@ -95,7 +95,11 @@ impl ConcreteObject for i64 {
         }
     }
 
-    fn get_prototype(interpreter: &Interpreter) -> &Dictionary {
-        &interpreter.integer_proto
+    fn convert_from(value: &Value) -> Option<Self> {
+        match value {
+            Value::Integer(int) => Some(*int),
+            Value::Float(float) if float.fract() == 0.0 => Some(*float as i64),
+            _ => None,
+        }
     }
 }

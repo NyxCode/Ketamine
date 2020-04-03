@@ -8,23 +8,23 @@ use std::fmt::Debug;
 mod interpreter;
 pub mod library;
 mod scope;
-mod values;
 #[cfg(feature = "serialize")]
 mod serialization;
+mod values;
 
 pub use crate::interpreter::*;
-pub use crate::values::*;
 pub use crate::scope::*;
+pub use crate::values::*;
 use std::rc::Rc;
 
 #[cfg(test)]
 mod tests {
     use crate::library::Library;
     use crate::values::Object;
-    
+
     use crate::Interpreter;
-    use std::time::Instant;
     use std::io::stdout;
+    use std::time::Instant;
 
     #[test]
     fn test() {
@@ -58,7 +58,9 @@ mod tests {
         let start = Instant::now();
         match interpreter.eval(src) {
             Ok(result) => println!("==> {}", result.to_string()),
-            Err(err) => report::report_io(&mut stdout(), src, err.start, err.end, err.value).unwrap(),
+            Err(err) => {
+                report::report_io(&mut stdout(), src, err.start, err.end, err.value).unwrap()
+            }
         }
         println!(
             "{: >5}s execution time",

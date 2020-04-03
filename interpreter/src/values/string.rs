@@ -1,8 +1,7 @@
 use crate::values::{Object, Value};
-use crate::{ConcreteObject, Dictionary, Interpreter};
+use crate::{Dictionary, HasPrototype, HasTypeName, Interpreter, ObjectConversion};
 use std::convert::TryInto;
 use std::ops::Deref;
-
 
 impl Object for String {
     fn type_name(&self) -> &'static str {
@@ -34,9 +33,11 @@ impl Object for String {
             Value::Integer(int) => {
                 let index: usize = match (*int).try_into() {
                     Ok(index) => index,
-                    Err(..) => return Some(Value::Null)
+                    Err(..) => return Some(Value::Null),
                 };
-                let value = self.chars().nth(index)
+                let value = self
+                    .chars()
+                    .nth(index)
                     .map(|c| Value::String(c.to_string()))
                     .unwrap_or(Value::Null);
                 Some(value)
@@ -55,7 +56,7 @@ impl Object for String {
                 }
                 Some(Value::String(out))
             }
-            _ => None
+            _ => None,
         }
     }
 
@@ -69,23 +70,27 @@ impl Object for String {
     }
 }
 
-impl ConcreteObject for String {
+impl HasPrototype for String {
+    fn get_prototype(interpreter: &Interpreter) -> &Dictionary {
+        &interpreter.string_proto
+    }
+}
+
+impl HasTypeName for String {
     fn type_name() -> &'static str {
         "string"
+    }
+}
+
+impl ObjectConversion for String {
+    fn get_as(value: Value) -> Option<Self> {
+        match value {
+            Value::String(string) => Some(string),
+            _ => None,
+        }
     }
 
     fn convert_from(value: &Value) -> Option<Self> {
         Some(value.to_string())
-    }
-
-    fn get_as(value: Value) -> Option<Self> {
-        match value {
-            Value::String(string) => Some(string),
-            _ => None
-        }
-    }
-
-    fn get_prototype(interpreter: &Interpreter) -> &Dictionary {
-        &interpreter.string_proto
     }
 }

@@ -5,12 +5,12 @@ use serde::Serialize;
 use wasm_bindgen::__rt::core::cell::RefCell;
 use wasm_bindgen::prelude::*;
 
-use interpreter::{Interpreter, NativeFunction, Object, Value};
 use interpreter::library::Library;
+use interpreter::{Interpreter, NativeFunction, Object, Value};
 use lexer::{LexingError, Pos, TokenValue};
-use parser::Parse;
 use parser::ast::Statement;
 use parser::error::Severity;
+use parser::Parse;
 
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
@@ -41,7 +41,8 @@ fn run_interpreter(src: &str) -> Result<(Value, String), JsValue> {
     let lib = BrowserLib::default();
     lib.register(&mut inter);
     interpreter::library::StandardLibrary.register(&mut inter);
-    inter.eval(src)
+    inter
+        .eval(src)
         .map_err(|Pos { start, end, value }| {
             let report = report::report_string(src, start, end, value);
             PlaygroundError { start, end, report }
@@ -65,7 +66,11 @@ fn run_lexer(src: &str) -> Result<Vec<Pos<TokenValue>>, JsValue> {
     lexer::tokenize(src)
         .map_err(|LexingError(pos)| {
             let report = report::report_string(src, pos, pos + 1, "illegal token");
-            PlaygroundError { start: pos, end: pos + 1, report }
+            PlaygroundError {
+                start: pos,
+                end: pos + 1,
+                report,
+            }
         })
         .map_err(|err| JsValue::from_serde(&err).unwrap())
 }
@@ -78,7 +83,7 @@ struct PlaygroundError {
 }
 
 struct BrowserLib {
-    out: Rc<RefCell<String>>
+    out: Rc<RefCell<String>>,
 }
 
 impl BrowserLib {
@@ -90,7 +95,7 @@ impl BrowserLib {
 impl Default for BrowserLib {
     fn default() -> Self {
         BrowserLib {
-            out: Rc::new(RefCell::new(String::new()))
+            out: Rc::new(RefCell::new(String::new())),
         }
     }
 }
@@ -98,13 +103,19 @@ impl Default for BrowserLib {
 impl Library for BrowserLib {
     fn register(&self, inter: &mut Interpreter) {
         let out = self.out.clone();
-        let print = NativeFunction::new(move |_, args| {
-            let msg = args.into_iter().map(|arg| arg.to_string()).collect::<Vec<_>>().join(" ");
+        let print = NativeFunction::new(move |_, _, args| {
+            let msg = args
+                .into_iter()
+                .map(|arg| arg.to_string())
+                .collect::<Vec<_>>()
+                .join(" ");
             let mut out = out.deref().borrow_mut();
             out.push_str(&msg);
             out.push_str("\n");
             Ok(Value::Null)
         });
-        inter.scope.push_var("print", Value::NativeFunction(print), false);
+        inter
+            .scope
+            .push_var("print", Value::NativeFunction(print), false);
     }
 }

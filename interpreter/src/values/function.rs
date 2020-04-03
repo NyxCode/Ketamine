@@ -74,7 +74,9 @@ impl Object for Function {
 }
 
 #[derive(Clone)]
-pub struct NativeFunction(pub Rc<RefCell<dyn Fn(Value, Vec<Value>) -> Result<Value, String>>>);
+pub struct NativeFunction(
+    pub Rc<RefCell<dyn Fn(&mut Interpreter, Value, Vec<Value>) -> Result<Value, String>>>,
+);
 
 impl Object for NativeFunction {
     fn type_name(&self) -> &'static str {
@@ -93,12 +95,12 @@ impl Object for NativeFunction {
         &self,
         start: usize,
         end: usize,
-        _scope: &mut Interpreter,
+        inter: &mut Interpreter,
         this: Value,
         args: Vec<Value>,
     ) -> Result<Value, Pos<String>> {
         let function = self.0.deref().borrow();
-        function(this, args).map_err(|x| Pos::new(start, end, x))
+        function(inter, this, args).map_err(|x| Pos::new(start, end, x))
     }
 }
 
@@ -109,7 +111,9 @@ impl Debug for NativeFunction {
 }
 
 impl NativeFunction {
-    pub fn new(closure: impl Fn(Value, Vec<Value>) -> Result<Value, String> + 'static) -> Self {
+    pub fn new(
+        closure: impl Fn(&mut Interpreter, Value, Vec<Value>) -> Result<Value, String> + 'static,
+    ) -> Self {
         NativeFunction(Rc::new(RefCell::new(closure)))
     }
 }
